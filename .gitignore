@@ -1,0 +1,12 @@
+# Node
+node_modules/
+dist/
+.env
+*.log
+
+# .NET
+bin/
+obj/
+*.db
+appsettings.Development.json
+appsettings.Local.json

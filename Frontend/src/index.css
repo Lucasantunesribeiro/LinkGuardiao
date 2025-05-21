@@ -1,0 +1,208 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --primary-color: #3B82F6;
+  --primary-hover: #2563EB;
+  --background-color: #F3F4F6;
+  --card-background: #FFFFFF;
+  --text-primary: #111827;
+  --text-secondary: #4B5563;
+  --error-color: #EF4444;
+  --success-color: #10B981;
+}
+
+body {
+  @apply bg-gray-50 text-gray-900 min-h-screen font-sans antialiased;
+}
+
+@layer components {
+  .card {
+    @apply bg-white rounded-xl shadow-lg p-6 border border-gray-100;
+    transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+  }
+
+  .card:hover {
+    @apply shadow-xl;
+    transform: translateY(-2px);
+  }
+
+  .input-field {
+    @apply appearance-none rounded-lg relative block w-full px-3 py-2 border border-gray-300 
+    placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 
+    focus:border-blue-500 focus:z-10 sm:text-sm transition-colors duration-200;
+  }
+
+  .input-field:hover {
+    @apply border-gray-400;
+  }
+
+  .btn-primary {
+    @apply bg-blue-600 text-white font-semibold py-2 px-4 rounded-lg hover:bg-blue-700 
+    focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 
+    transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed;
+  }
+
+  .btn-secondary {
+    @apply bg-gray-200 text-gray-700 font-semibold py-2 px-4 rounded-lg hover:bg-gray-300 
+    focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 
+    transition-colors duration-200;
+  }
+
+  .link {
+    @apply text-blue-600 hover:text-blue-700 transition-colors duration-200;
+  }
+
+  .error-message {
+    @apply text-red-600 text-sm mt-1;
+  }
+
+  .success-message {
+    @apply text-green-600 text-sm mt-1;
+  }
+
+  .form-group {
+    @apply space-y-1;
+  }
+
+  .form-label {
+    @apply block text-sm font-medium text-gray-700;
+  }
+
+  .icon-button {
+    @apply p-2 rounded-full hover:bg-gray-100 transition-colors duration-200 
+    focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500;
+  }
+
+  .navbar {
+    @apply bg-white shadow-sm sticky top-0 z-50;
+  }
+
+  .navbar-content {
+    @apply max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between;
+  }
+
+  .container-custom {
+    @apply max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8;
+  }
+
+  .page-title {
+    @apply text-3xl font-bold text-gray-900 mb-6;
+  }
+
+  .section-title {
+    @apply text-2xl font-semibold text-gray-900 mb-4;
+  }
+
+  .badge {
+    @apply inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium;
+  }
+
+  .badge-success {
+    @apply bg-green-100 text-green-800;
+  }
+
+  .badge-error {
+    @apply bg-red-100 text-red-800;
+  }
+
+  .badge-warning {
+    @apply bg-yellow-100 text-yellow-800;
+  }
+
+  .badge-info {
+    @apply bg-blue-100 text-blue-800;
+  }
+
+  .table-container {
+    @apply shadow overflow-hidden border-b border-gray-200 sm:rounded-lg;
+  }
+
+  .table {
+    @apply min-w-full divide-y divide-gray-200;
+  }
+
+  .table-header {
+    @apply bg-gray-50;
+  }
+
+  .table-header-cell {
+    @apply px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider;
+  }
+
+  .table-body {
+    @apply bg-white divide-y divide-gray-200;
+  }
+
+  .table-row {
+    @apply hover:bg-gray-50;
+  }
+
+  .table-cell {
+    @apply px-6 py-4 whitespace-nowrap text-sm text-gray-500;
+  }
+
+  .loading-spinner {
+    @apply animate-spin rounded-full h-5 w-5 border-t-2 border-b-2 border-blue-500;
+  }
+
+  .tooltip {
+    @apply absolute z-10 px-3 py-2 text-sm font-medium text-white bg-gray-900 rounded-lg shadow-sm 
+    invisible opacity-0 group-hover:visible group-hover:opacity-100 transition-opacity duration-300;
+  }
+}
+
+/* Toast Customization */
+.Toastify__toast {
+  @apply rounded-lg shadow-lg;
+}
+
+.Toastify__toast--success {
+  @apply bg-green-500;
+}
+
+.Toastify__toast--error {
+  @apply bg-red-500;
+}
+
+.Toastify__toast--info {
+  @apply bg-blue-500;
+}
+
+.Toastify__toast--warning {
+  @apply bg-yellow-500;
+}
+
+/* Animations */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fadeIn {
+  animation: fadeIn 0.3s ease-in-out;
+}
+
+/* Scrollbar Customization */
+::-webkit-scrollbar {
+  @apply w-2;
+}
+
+::-webkit-scrollbar-track {
+  @apply bg-gray-100 rounded-full;
+}
+
+::-webkit-scrollbar-thumb {
+  @apply bg-gray-300 rounded-full;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  @apply bg-gray-400;
+}

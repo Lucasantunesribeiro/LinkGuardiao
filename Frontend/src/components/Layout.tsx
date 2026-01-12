@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { useAuth } from '../context/AuthContext';
+import { useAuth } from '../features/auth/AuthContext';
 import { FiHome, FiLink, FiUser, FiLogOut, FiPlus } from 'react-icons/fi';
 
 interface LayoutProps {
@@ -69,7 +69,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
                     <FiUser className="h-5 w-5 text-blue-600" />
                   </div>
                   <span className="text-sm font-medium text-gray-700">
-                    {user.name}
+                    {user.username}
                   </span>
                 </div>
 

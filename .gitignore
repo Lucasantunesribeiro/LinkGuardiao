@@ -35,6 +35,13 @@ uploads/*
 # Ignore all files in the 'uploads' directory
 uploads/*
 
+=======
+# Backend
+Backend/bin/
+Backend/obj/
+Backend/appsettings.Development.json
+Backend/appsettings.Local.json
+
 
 
 

@@ -10,7 +10,7 @@ const ErrorMessage: React.FC<ErrorMessageProps> = ({ message, className = '' }) 
   if (!message) return null;
 
   return (
-    <div className={`flex items-center space-x-2 text-red-600 ${className}`}>
+    <div className={`flex items-center space-x-2 text-[#c14c32] ${className}`}>
       <FiAlertCircle className="h-5 w-5 flex-shrink-0" />
       <span className="text-sm">{message}</span>
     </div>

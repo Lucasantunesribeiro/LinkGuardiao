@@ -1,64 +1,121 @@
 import { Link } from 'react-router-dom';
-import { useAuth } from '../context/AuthContext';
-import { FiHome, FiLink, FiUser, FiLogOut } from 'react-icons/fi';
+import { useState } from 'react';
+import { useAuth } from '../features/auth/AuthContext';
+import { Button } from './Button';
+import { FiHome, FiLink, FiUser, FiLogOut, FiPlus, FiMenu, FiX } from 'react-icons/fi';
 
 const Navbar = () => {
   const { isAuthenticated, signOut, user } = useAuth();
+  const [isOpen, setIsOpen] = useState(false);
 
   return (
-    <nav className="bg-white shadow-lg">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex justify-between h-16">
-          <div className="flex">
-            <Link to="/" className="flex items-center">
-              <FiLink className="h-6 w-6 text-blue-600" />
-              <span className="ml-2 text-xl font-semibold text-gray-900">LinkGuardião</span>
+    <nav className="navbar">
+      <div className="navbar-content">
+        <Link to="/" className="flex items-center gap-3">
+          <span className="flex h-10 w-10 items-center justify-center rounded-2xl bg-[color:rgb(var(--sea))] text-white shadow-soft-xl">
+            <FiLink />
+          </span>
+          <div className="leading-tight">
+            <p className="text-lg font-display">LinkGuardiao</p>
+            <p className="text-xs text-stone-500">Encurte com controle</p>
+          </div>
+        </Link>
+
+        <div className="hidden md:flex items-center gap-6">
+          <Link to="/" className="flex items-center gap-2 text-sm text-stone-700 hover:text-ink transition">
+            <FiHome />
+            Inicio
+          </Link>
+          {isAuthenticated && (
+            <Link to="/dashboard" className="flex items-center gap-2 text-sm text-stone-700 hover:text-ink transition">
+              <FiLink />
+              Meus links
             </Link>
-            <div className="hidden sm:ml-6 sm:flex sm:space-x-8">
-              <Link to="/" className="inline-flex items-center px-1 pt-1 text-gray-900">
-                <FiHome className="mr-1" />
-                Início
+          )}
+        </div>
+
+        <div className="hidden md:flex items-center gap-3">
+          {isAuthenticated ? (
+            <>
+              <Link
+                to="/create-link"
+                className="btn-outline"
+              >
+                <FiPlus />
+                Novo link
               </Link>
-              {isAuthenticated && (
-                <Link to="/dashboard" className="inline-flex items-center px-1 pt-1 text-gray-900">
-                  <FiLink className="mr-1" />
-                  Meus Links
+              <div className="flex items-center gap-3 rounded-full bg-white/70 px-4 py-2 border border-[color:rgb(var(--line))]">
+                <span className="flex h-8 w-8 items-center justify-center rounded-full bg-[color:rgb(var(--sea))] text-white text-xs font-bold">
+                  {user?.username?.slice(0, 1).toUpperCase()}
+                </span>
+                <span className="text-sm text-stone-700">Oi, {user?.username}</span>
+                <button onClick={signOut} className="text-stone-500 hover:text-ink transition" aria-label="Sair">
+                  <FiLogOut />
+                </button>
+              </div>
+            </>
+          ) : (
+            <>
+              <Button href="/login" variant="ghost">
+                <FiUser />
+                Entrar
+              </Button>
+              <Button href="/register" variant="secondary">
+                Criar conta
+              </Button>
+            </>
+          )}
+        </div>
+
+        <button
+          className="md:hidden btn-ghost"
+          onClick={() => setIsOpen(!isOpen)}
+          aria-label="Abrir menu"
+        >
+          {isOpen ? <FiX /> : <FiMenu />}
+        </button>
+      </div>
+
+      {isOpen && (
+        <div className="md:hidden border-t border-white/70 bg-white/90 backdrop-blur">
+          <div className="app-container py-4 flex flex-col gap-3">
+            <Link to="/" className="flex items-center gap-2 text-sm text-stone-700" onClick={() => setIsOpen(false)}>
+              <FiHome />
+              Inicio
+            </Link>
+            {isAuthenticated && (
+              <>
+                <Link to="/dashboard" className="flex items-center gap-2 text-sm text-stone-700" onClick={() => setIsOpen(false)}>
+                  <FiLink />
+                  Meus links
                 </Link>
+                <Link to="/create-link" className="flex items-center gap-2 text-sm text-stone-700" onClick={() => setIsOpen(false)}>
+                  <FiPlus />
+                  Novo link
+                </Link>
+              </>
+            )}
+            <div className="flex flex-col gap-2 pt-2">
+              {isAuthenticated ? (
+                <button onClick={signOut} className="btn-outline justify-start">
+                  <FiLogOut />
+                  Sair
+                </button>
+              ) : (
+                <>
+                  <Button href="/login" variant="ghost" className="justify-start">
+                    <FiUser />
+                    Entrar
+                  </Button>
+                  <Button href="/register" variant="secondary" className="justify-start">
+                    Criar conta
+                  </Button>
+                </>
               )}
             </div>
           </div>
-          <div className="flex items-center">
-            {isAuthenticated ? (
-              <div className="flex items-center space-x-4">
-                <span className="text-gray-700">Olá, {user?.username}</span>
-                <button
-                  onClick={signOut}
-                  className="inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-                >
-                  <FiLogOut className="mr-1" />
-                  Sair
-                </button>
-              </div>
-            ) : (
-              <div className="flex items-center space-x-4">
-                <Link
-                  to="/login"
-                  className="inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-blue-600 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-                >
-                  <FiUser className="mr-1" />
-                  Entrar
-                </Link>
-                <Link
-                  to="/register"
-                  className="inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-                >
-                  Registrar
-                </Link>
-              </div>
-            )}
-          </div>
         </div>
-      </div>
+      )}
     </nav>
   );
 };

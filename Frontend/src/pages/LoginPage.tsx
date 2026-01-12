@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { useAuth } from '../context/AuthContext';
+import { useAuth } from '../features/auth/AuthContext';
 import { toast } from 'react-toastify';
 import { FiMail, FiLock, FiEye, FiEyeOff } from 'react-icons/fi';
 import Input from '../components/Input';
@@ -37,19 +37,28 @@ const LoginPage = () => {
   };
 
   return (
-    <div className="min-h-[80vh] flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-md w-full space-y-8 card">
-        <div>
-          <div className="flex justify-center">
-            <img src="/logo.png" alt="LinkGuardião" className="h-12 w-12" />
-          </div>
-          <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
-            Entrar na sua conta
-          </h2>
-          <p className="mt-2 text-center text-sm text-gray-600">
+    <div className="grid gap-10 lg:grid-cols-2 items-center">
+      <div className="space-y-6">
+        <span className="badge">Acesso seguro</span>
+        <h1 className="text-4xl md:text-5xl leading-tight">
+          Entre e continue monitorando seus links.
+        </h1>
+        <p className="text-stone-600">
+          Centralize campanhas, proteja acessos e acompanhe resultados com visao estrategica.
+        </p>
+        <div className="grid gap-3 text-sm text-stone-500">
+          <div className="panel px-4 py-3">Controle de expiracao e senha</div>
+          <div className="panel px-4 py-3">Insights diarios de performance</div>
+        </div>
+      </div>
+
+      <div className="panel p-8 shadow-soft-xl">
+        <div className="space-y-2">
+          <h2 className="text-2xl font-display">Entrar</h2>
+          <p className="text-sm text-stone-500">
             Ou{' '}
             <Link to="/register" className="link font-medium">
-              registre-se gratuitamente
+              crie sua conta gratuita
             </Link>
           </p>
         </div>
@@ -62,7 +71,7 @@ const LoginPage = () => {
               type="email"
               label="Email"
               icon={FiMail}
-              placeholder="Digite seu email"
+              placeholder="voce@empresa.com"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
@@ -78,7 +87,7 @@ const LoginPage = () => {
               icon={FiLock}
               rightIcon={showPassword ? FiEyeOff : FiEye}
               onRightIconClick={() => setShowPassword(!showPassword)}
-              placeholder="Digite sua senha"
+              placeholder="Sua senha segura"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               required
@@ -87,22 +96,20 @@ const LoginPage = () => {
             />
           </div>
 
-          <div>
-            <button
-              type="submit"
-              disabled={isSubmitting}
-              className="btn-primary w-full flex justify-center items-center space-x-2"
-            >
-              {isSubmitting ? (
-                <>
-                  <Loading size="sm" />
-                  <span>Processando...</span>
-                </>
-              ) : (
-                'Entrar'
-              )}
-            </button>
-          </div>
+          <button
+            type="submit"
+            disabled={isSubmitting}
+            className="btn-primary w-full flex justify-center items-center space-x-2"
+          >
+            {isSubmitting ? (
+              <>
+                <Loading size="sm" />
+                <span>Processando...</span>
+              </>
+            ) : (
+              'Entrar'
+            )}
+          </button>
         </form>
       </div>
     </div>

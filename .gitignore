@@ -8,7 +8,6 @@ dist/
 bin/
 obj/
 *.db
-appsettings.Development.json
 appsettings.Local.json
 
 # Frontend
@@ -17,11 +16,32 @@ Frontend/dist/
 Frontend/.env
 Frontend/package-lock.json
 
+# Docker
+docker-compose.yml
+docker-compose.override.yml
+
+# Other
+*.zip
+*.tar
+
+# Ignore all files in the 'uploads' directory
+uploads/*
+
+# Ignore all files in the 'uploads' directory
+uploads/*
+
+
+
+# Ignore all files in the 'uploads' directory
+uploads/*
+
+=======
 # Backend
 Backend/bin/
 Backend/obj/
 Backend/appsettings.Development.json
 Backend/appsettings.Local.json
+
 
 
 

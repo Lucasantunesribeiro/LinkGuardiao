@@ -1,8 +1,6 @@
-import { Link } from 'react-router-dom';
-import { FiLink, FiBarChart2, FiShield, FiClock } from 'react-icons/fi';
-import { useAuth } from '../context/AuthContext';
+import { FiLink, FiBarChart2, FiShield, FiClock, FiArrowUpRight } from 'react-icons/fi';
+import { useAuth } from '../features/auth/AuthContext';
 import { MainLayout } from "../components/MainLayout";
-import { DashboardHero } from '../components/DashboardHero';
 import { Button } from '../components/Button';
 import { Hero } from '../components/Hero';
 
@@ -12,87 +10,155 @@ const HomePage = () => {
   return (
     <MainLayout>
       {user ? (
-        <DashboardHero>
-          <div className="flex flex-col items-center justify-center gap-4 py-8">
-            <div className="flex items-center gap-3">
-              <span className="inline-flex items-center justify-center rounded-full bg-blue-500 text-white w-12 h-12 text-2xl shadow-lg">
-                👋
-              </span>
-              <h1 className="text-3xl md:text-4xl font-extrabold text-gray-900">Bem-vindo de volta, {user.name}!</h1>
+        <section className="app-container py-10">
+          <div className="card grid gap-8 lg:grid-cols-[1.2fr_1fr] items-center">
+            <div className="space-y-5">
+              <span className="badge">Bem-vindo de volta</span>
+              <h1 className="page-title">Tudo sob controle, {user.username}.</h1>
+              <p className="text-base text-stone-600">
+                Crie links protegidos, monitore campanhas e tenha visao completa de performance sem complicacao.
+              </p>
+              <div className="flex flex-wrap items-center gap-3">
+                <Button href="/dashboard" variant="primary" size="lg">
+                  Acessar dashboard
+                </Button>
+                <Button href="/create-link" variant="outline" size="lg">
+                  Novo link rapido
+                </Button>
+              </div>
             </div>
-            <p className="text-lg text-gray-700 max-w-xl text-center">Veja, gerencie e proteja seus links encurtados com facilidade.</p>
-            <Button href="/dashboard" className="mt-4 px-8 py-3 text-lg rounded-lg shadow-md bg-blue-600 hover:bg-blue-700 transition-colors">
-              Ir para Dashboard
-            </Button>
+            <div className="grid gap-4">
+              <div className="stat-card space-y-2">
+                <p className="text-xs uppercase text-stone-400">O que fazer agora</p>
+                <p className="text-sm text-stone-600">
+                  Crie um novo link, defina senha e acompanhe os acessos assim que publicar.
+                </p>
+              </div>
+              <div className="stat-card space-y-2">
+                <p className="text-xs uppercase text-stone-400">Visao rapida</p>
+                <p className="text-sm text-stone-600">
+                  Acompanhe cliques por data, origem e navegador direto no dashboard.
+                </p>
+              </div>
+            </div>
           </div>
-        </DashboardHero>
+        </section>
       ) : (
         <Hero>
-          <h1>Encurte e proteja seus links</h1>
-          <p>LinkGuardião é a ferramenta completa para encurtar, proteger e acompanhar o desempenho dos seus links</p>
-          <Button>Começar agora</Button>
-          <Button>Fazer login</Button>
+          <div className="grid gap-10 lg:grid-cols-[1.2fr_1fr] items-center">
+            <div className="space-y-6">
+              <span className="badge">Seguranca, performance e clareza</span>
+              <h1 className="text-4xl md:text-6xl leading-tight">
+                Links curtos, estrategia longa. Tudo no mesmo lugar.
+              </h1>
+              <p className="text-lg text-stone-600">
+                LinkGuardiao transforma URLs em ativos inteligentes com senha, expiracao e estatisticas
+                que mostram o que realmente importa.
+              </p>
+              <div className="flex flex-wrap items-center gap-3">
+                <Button href="/register" variant="primary" size="lg">
+                  Comecar gratis
+                </Button>
+                <Button href="/login" variant="ghost" size="lg">
+                  Ver meu painel
+                </Button>
+              </div>
+              <div className="flex flex-wrap gap-4 text-sm text-stone-500">
+                <span className="badge">Sem cartao</span>
+                <span className="badge">Controle total</span>
+                <span className="badge">Dados em tempo real</span>
+              </div>
+            </div>
+            <div className="panel p-6 space-y-4 animate-rise">
+              <div className="flex items-center justify-between">
+                <span className="text-xs uppercase text-stone-400">Como funciona</span>
+                <span className="text-xs text-stone-500">Em tres passos</span>
+              </div>
+              <div className="rounded-2xl border border-[color:rgb(var(--line))] bg-white px-4 py-3">
+                <p className="text-xs text-stone-400">1. Encurte</p>
+                <div className="flex items-center justify-between mt-1">
+                  <p className="font-semibold">Crie um link curto em segundos</p>
+                  <FiArrowUpRight className="text-[color:rgb(var(--sea))]" />
+                </div>
+              </div>
+              <div className="rounded-2xl border border-[color:rgb(var(--line))] bg-white px-4 py-3">
+                <p className="text-xs text-stone-400">2. Proteja</p>
+                <p className="text-sm text-stone-600 mt-1">
+                  Adicione senha e expiracao para controlar quem acessa.
+                </p>
+              </div>
+              <div className="rounded-2xl border border-[color:rgb(var(--line))] bg-white px-4 py-3">
+                <p className="text-xs text-stone-400">3. Analise</p>
+                <p className="text-sm text-stone-600 mt-1">
+                  Veja cliques por data, navegador e origem no dashboard.
+                </p>
+              </div>
+            </div>
+          </div>
         </Hero>
       )}
 
       {/* Features Section */}
-      <section className="py-16 bg-white">
-        <div className="container-custom mx-auto">
-          <h2 className="text-3xl font-bold text-center mb-12">Recursos Poderosos</h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
-            <div className="card flex flex-col items-center text-center">
-              <div className="bg-blue-100 p-4 rounded-full mb-4">
-                <FiLink size={32} className="text-blue-600" />
+      <section className="app-container py-14">
+        <div className="flex flex-col gap-3 text-center mb-10">
+          <span className="badge mx-auto">Recursos essenciais</span>
+          <h2 className="section-title">O poder de decidir quem acessa e quando.</h2>
+          <p className="text-stone-600 max-w-2xl mx-auto">
+            Nao e apenas um encurtador. E uma central para campanhas, acessos privados e conteudo estrategico.
+          </p>
+        </div>
+        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
+          {[
+            {
+              title: 'Encurtamento inteligente',
+              description: 'Reduza URLs com padrao de marca e compartilhamento rapido.',
+              icon: FiLink
+            },
+            {
+              title: 'Estatisticas cirurgicas',
+              description: 'Acompanhe cliques e tendencias com visao clara de impacto.',
+              icon: FiBarChart2
+            },
+            {
+              title: 'Protecao com senha',
+              description: 'Garanta acesso somente a quem precisa com um clique.',
+              icon: FiShield
+            },
+            {
+              title: 'Expiracao automatica',
+              description: 'Defina janelas de acesso e retire links do ar no tempo certo.',
+              icon: FiClock
+            }
+          ].map((item) => (
+            <div key={item.title} className="card flex flex-col gap-4">
+              <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-[color:rgba(19,122,108,0.15)] text-[color:rgb(var(--sea))]">
+                <item.icon size={22} />
               </div>
-              <h3 className="text-xl font-semibold mb-2">Encurtamento de URLs</h3>
-              <p className="text-gray-600">
-                Transforme longas URLs em links curtos e fáceis de compartilhar com apenas um clique
-              </p>
-            </div>
-            
-            <div className="card flex flex-col items-center text-center">
-              <div className="bg-blue-100 p-4 rounded-full mb-4">
-                <FiBarChart2 size={32} className="text-blue-600" />
+              <div>
+                <h3 className="text-lg font-semibold">{item.title}</h3>
+                <p className="text-sm text-stone-600 mt-2">{item.description}</p>
               </div>
-              <h3 className="text-xl font-semibold mb-2">Estatísticas Detalhadas</h3>
-              <p className="text-gray-600">
-                Acompanhe cliques, localização geográfica, dispositivos e muito mais em tempo real
-              </p>
             </div>
-            
-            <div className="card flex flex-col items-center text-center">
-              <div className="bg-blue-100 p-4 rounded-full mb-4">
-                <FiShield size={32} className="text-blue-600" />
-              </div>
-              <h3 className="text-xl font-semibold mb-2">Proteção com Senha</h3>
-              <p className="text-gray-600">
-                Adicione uma camada extra de segurança com proteção por senha para seus links importantes
-              </p>
-            </div>
-            
-            <div className="card flex flex-col items-center text-center">
-              <div className="bg-blue-100 p-4 rounded-full mb-4">
-                <FiClock size={32} className="text-blue-600" />
-              </div>
-              <h3 className="text-xl font-semibold mb-2">Expiração Automática</h3>
-              <p className="text-gray-600">
-                Configure links para expirarem automaticamente após um período específico
-              </p>
-            </div>
-          </div>
+          ))}
         </div>
       </section>
 
       {!user && (
-        <section className="bg-gray-100 py-16">
-          <div className="container-custom mx-auto text-center">
-            <h2 className="text-3xl font-bold mb-6">Pronto para começar?</h2>
-            <p className="text-xl mb-8 max-w-2xl mx-auto">
-              Crie sua conta gratuita agora e comece a gerenciar seus links de forma mais eficiente
+        <section className="app-container pb-16">
+          <div className="card text-center space-y-4">
+            <span className="badge mx-auto">Pronto para avancar?</span>
+            <h2 className="section-title">Comece a proteger seus links hoje.</h2>
+            <p className="text-stone-600 max-w-2xl mx-auto">
+              Crie sua conta gratuita e tenha controle total de acesso, expiracao e desempenho em minutos.
             </p>
-            <Link to="/register" className="btn-primary text-lg py-3 px-8">
-              Registre-se Gratuitamente
-            </Link>
+            <div className="flex flex-wrap justify-center gap-3">
+              <Button href="/register" variant="secondary" size="lg">
+                Registrar gratuitamente
+              </Button>
+              <Button href="/login" variant="outline" size="lg">
+                Ja tenho conta
+              </Button>
+            </div>
           </div>
         </section>
       )}

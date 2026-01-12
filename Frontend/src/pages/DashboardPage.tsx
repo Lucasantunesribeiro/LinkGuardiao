@@ -1,18 +1,12 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { api } from '../services/api';
+import { api } from '../lib/api/client';
+import { ShortenedLink } from '../lib/api/types';
+import { API_ROOT } from '../lib/config';
 import { toast } from 'react-toastify';
 import { FiPlus, FiEdit, FiTrash2, FiExternalLink, FiBarChart2 } from 'react-icons/fi';
-
-interface ShortenedLink {
-  id: number;
-  originalUrl: string;
-  shortCode: string;
-  title: string;
-  createdAt: string;
-  expiresAt: string | null;
-  isActive: boolean;
-}
+import { Button } from '../components/Button';
+import Loading from '../components/Loading';
 
 const DashboardPage = () => {
   const [links, setLinks] = useState<ShortenedLink[]>([]);
@@ -71,116 +65,79 @@ const DashboardPage = () => {
   };
 
   return (
-    <div className="container mx-auto px-4 py-8">
-      <div className="flex justify-between items-center mb-6">
-        <h1 className="text-3xl font-bold">Meus Links</h1>
-        <Link 
-          to="/create-link"
-          className="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded flex items-center"
-        >
-          <FiPlus className="mr-2" />
-          Criar Novo Link
-        </Link>
+    <div className="space-y-8">
+      <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+        <div className="space-y-2">
+          <span className="badge">Seu acervo</span>
+          <h1 className="page-title">Meus links</h1>
+          <p className="text-sm text-stone-600">
+            Gerencie, edite e acompanhe cada link com seguranca.
+          </p>
+        </div>
+        <Button href="/create-link" variant="secondary" size="lg">
+          <FiPlus />
+          Criar novo link
+        </Button>
       </div>
 
       {loading ? (
         <div className="flex justify-center items-center h-64">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500"></div>
+          <Loading />
         </div>
       ) : fetchError ? (
-        <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
-          <p>Erro ao carregar links. Verifique o servidor e tente novamente.</p>
+        <div className="panel px-4 py-4 text-sm text-[#c14c32]">
+          Erro ao carregar links. Verifique o servidor e tente novamente.
         </div>
       ) : links.length === 0 ? (
-        <div className="bg-white shadow-md rounded-lg p-6 text-center">
-          <p className="text-gray-600 mb-4">Você ainda não tem links encurtados.</p>
-          <Link 
-            to="/create-link" 
-            className="bg-blue-500 hover:bg-blue-600 text-white font-medium py-2 px-4 rounded inline-flex items-center"
-          >
-            <FiPlus className="mr-2" />
-            Criar seu primeiro link
-          </Link>
+        <div className="card text-center space-y-4">
+          <p className="text-stone-600">Voce ainda nao tem links encurtados.</p>
+          <Button href="/create-link" variant="secondary">
+            <FiPlus />
+            Criar meu primeiro link
+          </Button>
         </div>
       ) : (
-        <div className="bg-white shadow-md rounded-lg overflow-hidden">
-          <table className="min-w-full divide-y divide-gray-200">
-            <thead className="bg-gray-50">
-              <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Título</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Link Original</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Link Encurtado</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Criado em</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Ações</th>
-              </tr>
-            </thead>
-            <tbody className="bg-white divide-y divide-gray-200">
-              {links.map((link) => (
-                <tr key={link.id}>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="text-sm font-medium text-gray-900">
-                      {link.title || 'Sem título'}
-                    </div>
-                  </td>
-                  <td className="px-6 py-4">
-                    <div className="text-sm text-gray-900 max-w-xs truncate">
-                      {link.originalUrl}
-                    </div>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="text-sm text-blue-600">
-                      <a 
-                        href={`/${link.shortCode}`} 
-                        target="_blank" 
-                        rel="noopener noreferrer"
-                        className="hover:underline flex items-center"
-                      >
-                        {link.shortCode}
-                        <FiExternalLink className="ml-1" size={14} />
-                      </a>
-                    </div>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="text-sm text-gray-500">
-                      {formatDate(link.createdAt)}
-                    </div>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
-                      link.isActive 
-                        ? 'bg-green-100 text-green-800' 
-                        : 'bg-red-100 text-red-800'
-                    }`}>
+        <div className="grid gap-4">
+          {links.map((link) => {
+            const shortUrl = `${API_ROOT}/r/${link.shortCode}`;
+            return (
+              <div key={link.id} className="card flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+                <div className="space-y-2">
+                  <div className="flex items-center gap-3">
+                    <h3 className="text-lg font-semibold">{link.title || 'Sem titulo'}</h3>
+                    <span className={`badge ${link.isActive ? '' : 'opacity-60'}`}>
                       {link.isActive ? 'Ativo' : 'Inativo'}
                     </span>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                    <div className="flex space-x-2">
-                      <Link 
-                        to={`/edit-link/${link.id}`}
-                        className="text-indigo-600 hover:text-indigo-900"
-                      >
-                        <FiEdit />
-                      </Link>
-                      <Link 
-                        to={`/stats/${link.id}`}
-                        className="text-blue-600 hover:text-blue-900"
-                      >
-                        <FiBarChart2 />
-                      </Link>
-                      <button 
-                        onClick={() => handleDelete(link.id)}
-                        className="text-red-600 hover:text-red-900"
-                      >
-                        <FiTrash2 />
-                      </button>
-                    </div>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+                  </div>
+                  <p className="text-sm text-stone-500 break-all">{link.originalUrl}</p>
+                  <a
+                    href={shortUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-2 text-sm text-[color:rgb(var(--sea))] hover:text-[color:rgb(var(--sea-strong))]"
+                  >
+                    {shortUrl}
+                    <FiExternalLink size={14} />
+                  </a>
+                  <p className="text-xs text-stone-400">Criado em {formatDate(link.createdAt)}</p>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Link to={`/edit-link/${link.id}`} className="btn-outline">
+                    <FiEdit />
+                    Editar
+                  </Link>
+                  <Link to={`/stats/${link.id}`} className="btn-ghost">
+                    <FiBarChart2 />
+                    Estatisticas
+                  </Link>
+                  <button onClick={() => handleDelete(link.id)} className="btn-ghost text-[#c14c32]">
+                    <FiTrash2 />
+                    Excluir
+                  </button>
+                </div>
+              </div>
+            );
+          })}
         </div>
       )}
     </div>

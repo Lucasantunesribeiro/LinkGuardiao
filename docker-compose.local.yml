@@ -1,0 +1,58 @@
+services:
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile.backend
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+      ConnectionStrings__Default: Host=db;Database=linkguardiao;Username=postgres;Password=postgres
+      Database__Provider: Postgres
+      Jwt__Secret: dev-secret-change-me-please-32chars
+      Jwt__Issuer: LinkGuardiao
+      Jwt__Audience: LinkGuardiao
+      Cors__AllowedOrigins__0: http://localhost:5173
+      Seed__Enable: "false"
+    depends_on:
+      db:
+        condition: service_healthy
+
+  frontend:
+    build:
+      context: .
+      dockerfile: Dockerfile.frontend
+    depends_on:
+      - api
+
+  caddy:
+    image: caddy:2-alpine
+    ports:
+      - "5000:80"
+    volumes:
+      - ./Caddyfile.local:/etc/caddy/Caddyfile:ro
+    depends_on:
+      - api
+      - frontend
+
+  db:
+    image: postgres:15-alpine
+    environment:
+      POSTGRES_DB: linkguardiao
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d linkguardiao"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  adminer:
+    image: adminer:4
+    ports:
+      - "8081:8080"
+
+volumes:
+  pgdata:

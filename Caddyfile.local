@@ -1,0 +1,7 @@
+:80 {
+  encode gzip
+
+  @api path /api* /swagger* /r/*
+  reverse_proxy @api api:8080
+  reverse_proxy frontend:80
+}

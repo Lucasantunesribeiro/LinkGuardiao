@@ -4,6 +4,8 @@ import { api } from '../lib/api/client';
 import { ShortenedLink } from '../lib/api/types';
 import { toast } from 'react-toastify';
 import { FiLink, FiType, FiClock, FiLock } from 'react-icons/fi';
+import Input from '../components/Input';
+import { Button } from '../components/Button';
 
 const EditLinkPage = () => {
   const { id } = useParams<{ id: string }>();
@@ -90,135 +92,105 @@ const EditLinkPage = () => {
 
   if (loading) {
     return (
-      <div className="flex justify-center items-center min-h-screen">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
+      <div className="flex justify-center items-center min-h-[60vh]">
+        <div className="loading-spinner h-10 w-10" />
       </div>
     );
   }
 
   return (
-    <div className="container mx-auto px-4 py-8">
-      <div className="max-w-2xl mx-auto">
-        <h1 className="text-3xl font-bold mb-8">Editar Link</h1>
+    <div className="grid gap-10 lg:grid-cols-[1fr_1.1fr] items-start">
+      <div className="space-y-4">
+        <span className="badge">Editar link</span>
+        <h1 className="page-title">Ajuste detalhes e seguranca.</h1>
+        <p className="text-stone-600">
+          Atualize destino, titulo e controle de expiração com rapidez.
+        </p>
+        <div className="panel px-4 py-4 text-sm text-stone-500">
+          Desative o link se precisar interromper acessos imediatamente.
+        </div>
+      </div>
 
-        <form onSubmit={handleSubmit} className="bg-white shadow-md rounded-lg p-6">
-          <div className="mb-4">
-            <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="originalUrl">
-              URL Original*
-            </label>
-            <div className="relative">
-              <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
-                <FiLink className="text-gray-400" />
-              </div>
-              <input
-                type="text"
-                id="originalUrl"
-                value={originalUrl}
-                onChange={(e) => setOriginalUrl(e.target.value)}
-                className={`w-full py-2 pl-10 pr-3 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${errors.originalUrl ? 'border-red-500' : 'border-gray-300'}`}
-              />
-            </div>
-            {errors.originalUrl && <p className="text-red-500 text-xs mt-1">{errors.originalUrl}</p>}
-          </div>
+      <form onSubmit={handleSubmit} className="panel p-8 space-y-6">
+        <Input
+          id="originalUrl"
+          name="originalUrl"
+          type="text"
+          label="URL Original"
+          icon={FiLink}
+          value={originalUrl}
+          onChange={(e) => setOriginalUrl(e.target.value)}
+          error={errors.originalUrl}
+          required
+        />
 
-          <div className="mb-4">
-            <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="title">
-              Titulo (opcional)
-            </label>
-            <div className="relative">
-              <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
-                <FiType className="text-gray-400" />
-              </div>
-              <input
-                type="text"
-                id="title"
-                value={title}
-                onChange={(e) => setTitle(e.target.value)}
-                className="w-full py-2 pl-10 pr-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-              />
-            </div>
-          </div>
+        <Input
+          id="title"
+          name="title"
+          type="text"
+          label="Titulo (opcional)"
+          icon={FiType}
+          value={title}
+          onChange={(e) => setTitle(e.target.value)}
+        />
 
-          <div className="mb-4">
-            <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="password">
-              Nova senha (opcional)
-            </label>
-            <div className="relative">
-              <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
-                <FiLock className="text-gray-400" />
-              </div>
-              <input
-                type="password"
-                id="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                className={`w-full py-2 pl-10 pr-3 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${errors.password ? 'border-red-500' : 'border-gray-300'}`}
-              />
-            </div>
-            {errors.password && <p className="text-red-500 text-xs mt-1">{errors.password}</p>}
-          </div>
-          <div className="mb-4">
-            <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="expiresAt">
-              Data de Expiracao (opcional)
-            </label>
-            <div className="relative">
-              <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
-                <FiClock className="text-gray-400" />
-              </div>
-              <input
-                type="datetime-local"
-                id="expiresAt"
-                value={expiresAt}
-                onChange={(e) => setExpiresAt(e.target.value)}
-                className="w-full py-2 pl-10 pr-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-              />
-            </div>
-          </div>
+        <Input
+          id="password"
+          name="password"
+          type="password"
+          label="Nova senha (opcional)"
+          icon={FiLock}
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+          error={errors.password}
+        />
 
-          <div className="mb-4">
-            <label className="inline-flex items-center">
+        <Input
+          id="expiresAt"
+          name="expiresAt"
+          type="datetime-local"
+          label="Data de expiracao (opcional)"
+          icon={FiClock}
+          value={expiresAt}
+          onChange={(e) => setExpiresAt(e.target.value)}
+        />
+
+        <div className="flex flex-col gap-3 text-sm text-stone-600">
+          <label className="inline-flex items-center gap-2">
+            <input
+              type="checkbox"
+              checked={isActive}
+              onChange={(e) => setIsActive(e.target.checked)}
+              className="rounded border-[color:rgb(var(--line))] text-[color:rgb(var(--sea))] focus:ring-[color:rgb(var(--sea))]"
+            />
+            Link ativo
+          </label>
+          {hasPassword && (
+            <label className="inline-flex items-center gap-2">
               <input
                 type="checkbox"
-                checked={isActive}
-                onChange={(e) => setIsActive(e.target.checked)}
-                className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                checked={removePassword}
+                onChange={(e) => setRemovePassword(e.target.checked)}
+                className="rounded border-[color:rgb(var(--line))] text-[color:rgb(var(--sea))] focus:ring-[color:rgb(var(--sea))]"
               />
-              <span className="ml-2 text-sm text-gray-700">Link ativo</span>
+              Remover senha atual
             </label>
-          </div>
-
-          {hasPassword && (
-            <div className="mb-6">
-              <label className="inline-flex items-center">
-                <input
-                  type="checkbox"
-                  checked={removePassword}
-                  onChange={(e) => setRemovePassword(e.target.checked)}
-                  className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-                />
-                <span className="ml-2 text-sm text-gray-700">Remover senha atual</span>
-              </label>
-            </div>
           )}
+        </div>
 
-          <div className="flex items-center justify-between">
-            <button
-              type="button"
-              onClick={() => navigate('/dashboard')}
-              className="text-gray-700 bg-gray-200 hover:bg-gray-300 font-bold py-2 px-4 rounded focus:outline-none focus:ring-2 focus:ring-gray-500"
-            >
-              Cancelar
-            </button>
-            <button
-              type="submit"
-              disabled={isSubmitting}
-              className="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              {isSubmitting ? 'Salvando...' : 'Salvar Alteracoes'}
-            </button>
-          </div>
-        </form>
-      </div>
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <Button
+            type="button"
+            onClick={() => navigate('/dashboard')}
+            variant="ghost"
+          >
+            Cancelar
+          </Button>
+          <Button type="submit" disabled={isSubmitting} variant="primary">
+            {isSubmitting ? 'Salvando...' : 'Salvar'}
+          </Button>
+        </div>
+      </form>
     </div>
   );
 };

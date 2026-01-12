@@ -1,41 +1,54 @@
-# LinkGuardião 🔗🛡️
+# LinkGuardiao
 
-LinkGuardião é um sistema completo de encurtamento de URLs com proteção e estatísticas. O projeto oferece uma solução para criar, gerenciar e monitorar links curtos, com recursos avançados como proteção por senha, expiração automática e análise detalhada de acessos.
+LinkGuardiao e um encurtador de URLs com autenticacao, protecao por senha e estatisticas de acesso.
 
+## Stack
+- Backend: ASP.NET Core 8, EF Core, JWT, Swagger
+- Frontend: React + Vite + TypeScript + Tailwind + Chart.js
+- Infra: Docker, Postgres (prod), SQLite (dev)
 
-## Recursos ✨
+## Arquitetura
+- `src/LinkGuardiao.Api`: controllers, middleware, configuracao
+- `src/LinkGuardiao.Application`: DTOs, validacao, casos de uso
+- `src/LinkGuardiao.Infrastructure`: EF Core, auth, background jobs
+- `tests/`: unitarios e integracao
 
-- **Encurtamento de URLs**: Transforme longas URLs em links curtos e fáceis de compartilhar
-- **Estatísticas Detalhadas**: Acompanhe cliques, localização geográfica, dispositivos e muito mais
-- **Proteção com Senha**: Adicione uma camada extra de segurança para seus links importantes
-- **Expiração Automática**: Configure links para expirarem após um período específico
-- **Dashboard Intuitivo**: Interface amigável para gerenciar todos os seus links
-- **Sistema de Contas**: Registro e login para manter seus links organizados
-- **Responsivo**: Funciona perfeitamente em dispositivos móveis e desktop
-
-## Tecnologias Utilizadas 🚀
-
+## Rodar localmente
 ### Backend
-- ASP.NET Core 8.0
-- Entity Framework Core
-- SQLite (para desenvolvimento local)
-- JWT para autenticação
-- Swagger para documentação da API
+```bash
+dotnet run --project src/LinkGuardiao.Api
+```
 
 ### Frontend
-- React
-- TypeScript
-- Vite (para build e desenvolvimento)
-- React Router
-- Axios
-- Tailwind CSS
-- Chart.js para visualização de dados
-- Formik e Yup para validação de formulários
+```bash
+cd Frontend
+npm ci
+cp .env.example .env
+npm run dev
+```
+## Variaveis principais
+- Backend: `ConnectionStrings__Default`, `Jwt__Secret` (min 32 chars), `Cors__AllowedOrigins__0`
+- Frontend: `VITE_API_BASE_URL`
 
-## Instalação e Execução Local 🖥️
+## Testes
+```bash
+dotnet test
+```
 
-### Pré-requisitos
-- [.NET 8 SDK](https://dotnet.microsoft.com/download)
-- [Node.js](https://nodejs.org/) (v18+ recomendado)
-- [npm](https://www.npmjs.com/) ou [yarn](https://yarnpkg.com/)
+```bash
+cd Frontend
+npm run build
+```
 
+## Docker (dev)
+```bash
+docker compose -f docker-compose.local.yml up --build
+```
+
+## Deploy
+- Frontend: `docs/DEPLOY_CLOUDFLARE_PAGES.md`
+- Backend: `docs/DEPLOY_ORACLE_ALWAYS_FREE.md`
+
+## CI/CD
+- CI: `.github/workflows/ci.yml`
+- Deploy manual: `.github/workflows/deploy.yml`

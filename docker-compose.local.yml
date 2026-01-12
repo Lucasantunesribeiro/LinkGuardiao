@@ -7,7 +7,7 @@ services:
       ASPNETCORE_ENVIRONMENT: Development
       ConnectionStrings__Default: Host=db;Database=linkguardiao;Username=postgres;Password=postgres
       Database__Provider: Postgres
-      Jwt__Secret: dev-secret-change-me
+      Jwt__Secret: dev-secret-change-me-please-32chars
       Jwt__Issuer: LinkGuardiao
       Jwt__Audience: LinkGuardiao
       Cors__AllowedOrigins__0: http://localhost:5173

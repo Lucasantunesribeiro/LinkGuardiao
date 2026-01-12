@@ -2,7 +2,15 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.5.2.0
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LinkGuardiao.API", "Backend\LinkGuardiao.API.csproj", "{35BA3EEE-8738-0509-0C45-1D16E0D5C16B}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LinkGuardiao.Api", "src\LinkGuardiao.Api\LinkGuardiao.Api.csproj", "{35BA3EEE-8738-0509-0C45-1D16E0D5C16B}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LinkGuardiao.Application", "src\LinkGuardiao.Application\LinkGuardiao.Application.csproj", "{87D9C3E7-7EF6-41A2-83FA-AA6119B5C7D4}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LinkGuardiao.Infrastructure", "src\LinkGuardiao.Infrastructure\LinkGuardiao.Infrastructure.csproj", "{20DA961B-0FD6-47AF-9BE0-076531FEF1E1}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LinkGuardiao.Application.Tests", "tests\LinkGuardiao.Application.Tests\LinkGuardiao.Application.Tests.csproj", "{D74A6CAC-9CED-4BBA-9E36-969B4EF1C531}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LinkGuardiao.Api.Tests", "tests\LinkGuardiao.Api.Tests\LinkGuardiao.Api.Tests.csproj", "{B6AB980F-255F-4DC6-9F47-767A0C6F085D}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -14,6 +22,22 @@ Global
 		{35BA3EEE-8738-0509-0C45-1D16E0D5C16B}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{35BA3EEE-8738-0509-0C45-1D16E0D5C16B}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{35BA3EEE-8738-0509-0C45-1D16E0D5C16B}.Release|Any CPU.Build.0 = Release|Any CPU
+		{87D9C3E7-7EF6-41A2-83FA-AA6119B5C7D4}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{87D9C3E7-7EF6-41A2-83FA-AA6119B5C7D4}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{87D9C3E7-7EF6-41A2-83FA-AA6119B5C7D4}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{87D9C3E7-7EF6-41A2-83FA-AA6119B5C7D4}.Release|Any CPU.Build.0 = Release|Any CPU
+		{20DA961B-0FD6-47AF-9BE0-076531FEF1E1}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{20DA961B-0FD6-47AF-9BE0-076531FEF1E1}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{20DA961B-0FD6-47AF-9BE0-076531FEF1E1}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{20DA961B-0FD6-47AF-9BE0-076531FEF1E1}.Release|Any CPU.Build.0 = Release|Any CPU
+		{D74A6CAC-9CED-4BBA-9E36-969B4EF1C531}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{D74A6CAC-9CED-4BBA-9E36-969B4EF1C531}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{D74A6CAC-9CED-4BBA-9E36-969B4EF1C531}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{D74A6CAC-9CED-4BBA-9E36-969B4EF1C531}.Release|Any CPU.Build.0 = Release|Any CPU
+		{B6AB980F-255F-4DC6-9F47-767A0C6F085D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{B6AB980F-255F-4DC6-9F47-767A0C6F085D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{B6AB980F-255F-4DC6-9F47-767A0C6F085D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{B6AB980F-255F-4DC6-9F47-767A0C6F085D}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

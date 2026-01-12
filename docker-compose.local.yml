@@ -1,0 +1,37 @@
+services:
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile.backend
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+      ConnectionStrings__Default: Host=db;Database=linkguardiao;Username=postgres;Password=postgres
+      Database__Provider: Postgres
+      Jwt__Secret: dev-secret-change-me
+      Jwt__Issuer: LinkGuardiao
+      Jwt__Audience: LinkGuardiao
+      Cors__AllowedOrigins__0: http://localhost:5173
+      Seed__Enable: "false"
+    ports:
+      - "5000:8080"
+    depends_on:
+      - db
+
+  db:
+    image: postgres:15-alpine
+    environment:
+      POSTGRES_DB: linkguardiao
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+
+  adminer:
+    image: adminer:4
+    ports:
+      - "8081:8080"
+
+volumes:
+  pgdata:

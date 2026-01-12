@@ -12,10 +12,25 @@ services:
       Jwt__Audience: LinkGuardiao
       Cors__AllowedOrigins__0: http://localhost:5173
       Seed__Enable: "false"
-    ports:
-      - "5000:8080"
     depends_on:
       - db
+
+  frontend:
+    build:
+      context: .
+      dockerfile: Dockerfile.frontend
+    depends_on:
+      - api
+
+  caddy:
+    image: caddy:2-alpine
+    ports:
+      - "5000:80"
+    volumes:
+      - ./Caddyfile.local:/etc/caddy/Caddyfile:ro
+    depends_on:
+      - api
+      - frontend
 
   db:
     image: postgres:15-alpine

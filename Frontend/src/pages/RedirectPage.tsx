@@ -7,7 +7,7 @@ const RedirectPage = () => {
 
   useEffect(() => {
     if (shortCode) {
-      window.location.href = `${API_ROOT}/${shortCode}`;
+      window.location.href = `${API_ROOT}/r/${shortCode}`;
     }
   }, [shortCode]);
 

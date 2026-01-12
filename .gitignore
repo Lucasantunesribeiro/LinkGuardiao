@@ -8,7 +8,6 @@ dist/
 bin/
 obj/
 *.db
-appsettings.Development.json
 appsettings.Local.json
 
 # Frontend
@@ -16,12 +15,6 @@ Frontend/node_modules/
 Frontend/dist/
 Frontend/.env
 Frontend/package-lock.json
-
-# Backend
-Backend/bin/
-Backend/obj/
-Backend/appsettings.Development.json
-Backend/appsettings.Local.json
 
 # Docker
 docker-compose.yml

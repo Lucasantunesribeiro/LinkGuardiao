@@ -5,7 +5,7 @@ interface DashboardHeroProps {
 }
 
 export const DashboardHero: React.FC<DashboardHeroProps> = ({ children }) => (
-  <section className="bg-blue-100 py-16 text-center">
-    <div className="container mx-auto">{children}</div>
+  <section className="rounded-3xl border border-white/70 bg-white/70 px-6 py-10 shadow-soft-xl backdrop-blur">
+    <div className="app-container">{children}</div>
   </section>
 ); 

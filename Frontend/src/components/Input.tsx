@@ -22,7 +22,7 @@ const Input = forwardRef<HTMLInputElement, InputProps>(
         <div className="relative">
           {Icon && (
             <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-              <Icon className="h-5 w-5 text-gray-400" />
+              <Icon className="h-5 w-5 text-stone-400" />
             </div>
           )}
 
@@ -32,7 +32,7 @@ const Input = forwardRef<HTMLInputElement, InputProps>(
               input-field
               ${Icon ? 'pl-10' : ''}
               ${RightIcon ? 'pr-10' : ''}
-              ${error ? 'border-red-300 focus:border-red-500 focus:ring-red-500' : ''}
+              ${error ? 'border-[#c14c32] focus:ring-[#c14c32]' : ''}
               ${className}
             `}
             {...props}
@@ -42,11 +42,11 @@ const Input = forwardRef<HTMLInputElement, InputProps>(
             <div
               className={`
                 absolute inset-y-0 right-0 pr-3 flex items-center
-                ${onRightIconClick ? 'cursor-pointer hover:text-gray-700' : 'pointer-events-none'}
+                ${onRightIconClick ? 'cursor-pointer hover:text-stone-700' : 'pointer-events-none'}
               `}
               onClick={onRightIconClick}
             >
-              <RightIcon className="h-5 w-5 text-gray-400" />
+              <RightIcon className="h-5 w-5 text-stone-400" />
             </div>
           )}
         </div>

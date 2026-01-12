@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom';
 import { FiLink, FiBarChart2, FiShield, FiClock } from 'react-icons/fi';
-import { useAuth } from '../context/AuthContext';
+import { useAuth } from '../features/auth/AuthContext';
 import { MainLayout } from "../components/MainLayout";
 import { DashboardHero } from '../components/DashboardHero';
 import { Button } from '../components/Button';
@@ -18,7 +18,7 @@ const HomePage = () => {
               <span className="inline-flex items-center justify-center rounded-full bg-blue-500 text-white w-12 h-12 text-2xl shadow-lg">
                 👋
               </span>
-              <h1 className="text-3xl md:text-4xl font-extrabold text-gray-900">Bem-vindo de volta, {user.name}!</h1>
+              <h1 className="text-3xl md:text-4xl font-extrabold text-gray-900">Bem-vindo de volta, {user.username}!</h1>
             </div>
             <p className="text-lg text-gray-700 max-w-xl text-center">Veja, gerencie e proteja seus links encurtados com facilidade.</p>
             <Button href="/dashboard" className="mt-4 px-8 py-3 text-lg rounded-lg shadow-md bg-blue-600 hover:bg-blue-700 transition-colors">

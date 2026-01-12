@@ -1,18 +1,10 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { api } from '../services/api';
+import { api } from '../lib/api/client';
+import { ShortenedLink } from '../lib/api/types';
+import { API_ROOT } from '../lib/config';
 import { toast } from 'react-toastify';
 import { FiPlus, FiEdit, FiTrash2, FiExternalLink, FiBarChart2 } from 'react-icons/fi';
-
-interface ShortenedLink {
-  id: number;
-  originalUrl: string;
-  shortCode: string;
-  title: string;
-  createdAt: string;
-  expiresAt: string | null;
-  isActive: boolean;
-}
 
 const DashboardPage = () => {
   const [links, setLinks] = useState<ShortenedLink[]>([]);
@@ -131,7 +123,7 @@ const DashboardPage = () => {
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className="text-sm text-blue-600">
                       <a 
-                        href={`/${link.shortCode}`} 
+                        href={`${API_ROOT}/${link.shortCode}`} 
                         target="_blank" 
                         rel="noopener noreferrer"
                         className="hover:underline flex items-center"

@@ -1,12 +1,13 @@
 import { useEffect } from 'react';
 import { useParams } from 'react-router-dom';
+import { API_ROOT } from '../lib/config';
 
 const RedirectPage = () => {
   const { shortCode } = useParams();
 
   useEffect(() => {
     if (shortCode) {
-      window.location.href = `http://localhost:5000/${shortCode}`;
+      window.location.href = `${API_ROOT}/${shortCode}`;
     }
   }, [shortCode]);
 

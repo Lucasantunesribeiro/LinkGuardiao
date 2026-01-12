@@ -16,11 +16,7 @@ const Loading: React.FC<LoadingProps> = ({ size = 'md', center = false }) => {
 
   return (
     <div className={containerClasses}>
-      <div className="relative">
-        <div className={`animate-spin rounded-full border-4 border-gray-200 ${sizeClasses[size]}`}>
-          <div className={`absolute top-0 left-0 rounded-full border-4 border-blue-600 opacity-75 ${sizeClasses[size]} animate-ping`}></div>
-        </div>
-      </div>
+      <div className={`loading-spinner ${sizeClasses[size]}`} />
     </div>
   );
 };

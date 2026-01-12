@@ -4,6 +4,8 @@ import { api } from '../lib/api/client';
 import { LinkCreateRequest } from '../lib/api/types';
 import { toast } from 'react-toastify';
 import { FiLink, FiType, FiClock, FiLock } from 'react-icons/fi';
+import Input from '../components/Input';
+import { Button } from '../components/Button';
 
 const CreateLinkPage = () => {
   const [originalUrl, setOriginalUrl] = useState('');
@@ -68,106 +70,78 @@ const CreateLinkPage = () => {
   };
 
   return (
-    <div className="container mx-auto px-4 py-8">
-      <div className="max-w-2xl mx-auto">
-        <h1 className="text-3xl font-bold mb-8">Criar Novo Link</h1>
-        
-        <form onSubmit={handleSubmit} className="bg-white shadow-md rounded-lg p-6">
-          <div className="mb-4">
-            <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="originalUrl">
-              URL Original*
-            </label>
-            <div className="relative">
-              <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
-                <FiLink className="text-gray-400" />
-              </div>
-              <input
-                type="text"
-                id="originalUrl"
-                placeholder="https://exemplo.com/pagina-com-url-grande"
-                value={originalUrl}
-                onChange={(e) => setOriginalUrl(e.target.value)}
-                className={`w-full py-2 pl-10 pr-3 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${errors.originalUrl ? 'border-red-500' : 'border-gray-300'}`}
-              />
-            </div>
-            {errors.originalUrl && <p className="text-red-500 text-xs mt-1">{errors.originalUrl}</p>}
-          </div>
-          
-          <div className="mb-4">
-            <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="title">
-              Título (opcional)
-            </label>
-            <div className="relative">
-              <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
-                <FiType className="text-gray-400" />
-              </div>
-              <input
-                type="text"
-                id="title"
-                placeholder="Meu link personalizado"
-                value={title}
-                onChange={(e) => setTitle(e.target.value)}
-                className="w-full py-2 pl-10 pr-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-              />
-            </div>
-          </div>
-          
-          <div className="mb-4">
-            <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="password">
-              Senha (opcional)
-            </label>
-            <div className="relative">
-              <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
-                <FiLock className="text-gray-400" />
-              </div>
-              <input
-                type="password"
-                id="password"
-                placeholder="Senha para proteger o link"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                className={`w-full py-2 pl-10 pr-3 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${errors.password ? 'border-red-500' : 'border-gray-300'}`}
-              />
-            </div>
-            {errors.password && <p className="text-red-500 text-xs mt-1">{errors.password}</p>}
-          </div>
-          
-          <div className="mb-6">
-            <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="expiresAt">
-              Data de Expiração (opcional)
-            </label>
-            <div className="relative">
-              <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
-                <FiClock className="text-gray-400" />
-              </div>
-              <input
-                type="datetime-local"
-                id="expiresAt"
-                value={expiresAt}
-                onChange={(e) => setExpiresAt(e.target.value)}
-                className="w-full py-2 pl-10 pr-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-              />
-            </div>
-          </div>
-          
-          <div className="flex items-center justify-between">
-            <button
-              type="button"
-              onClick={() => navigate('/dashboard')}
-              className="text-gray-700 bg-gray-200 hover:bg-gray-300 font-bold py-2 px-4 rounded focus:outline-none focus:ring-2 focus:ring-gray-500"
-            >
-              Cancelar
-            </button>
-            <button
-              type="submit"
-              disabled={isSubmitting}
-              className="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              {isSubmitting ? 'Criando...' : 'Criar Link'}
-            </button>
-          </div>
-        </form>
+    <div className="grid gap-10 lg:grid-cols-[1fr_1.1fr] items-start">
+      <div className="space-y-4">
+        <span className="badge">Novo link</span>
+        <h1 className="page-title">Crie um link protegido.</h1>
+        <p className="text-stone-600">
+          Defina senha, expiracao e titulo para manter o controle total sobre cada acesso.
+        </p>
+        <div className="panel px-4 py-4 text-sm text-stone-500">
+          Dica: links com senha geram acessos mais qualificados.
+        </div>
       </div>
+
+      <form onSubmit={handleSubmit} className="panel p-8 space-y-6">
+        <Input
+          id="originalUrl"
+          name="originalUrl"
+          type="text"
+          label="URL Original"
+          icon={FiLink}
+          placeholder="https://exemplo.com/pagina-com-url-grande"
+          value={originalUrl}
+          onChange={(e) => setOriginalUrl(e.target.value)}
+          error={errors.originalUrl}
+          required
+        />
+
+        <Input
+          id="title"
+          name="title"
+          type="text"
+          label="Titulo (opcional)"
+          icon={FiType}
+          placeholder="Meu link personalizado"
+          value={title}
+          onChange={(e) => setTitle(e.target.value)}
+        />
+
+        <Input
+          id="password"
+          name="password"
+          type="password"
+          label="Senha (opcional)"
+          icon={FiLock}
+          placeholder="Proteja seu link com senha"
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+          error={errors.password}
+        />
+
+        <Input
+          id="expiresAt"
+          name="expiresAt"
+          type="datetime-local"
+          label="Data de expiracao (opcional)"
+          icon={FiClock}
+          value={expiresAt}
+          onChange={(e) => setExpiresAt(e.target.value)}
+        />
+
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <Button
+            type="button"
+            onClick={() => navigate('/dashboard')}
+            variant="ghost"
+          >
+            Cancelar
+          </Button>
+          <Button type="submit" disabled={isSubmitting} variant="primary">
+            {isSubmitting ? 'Criando...' : 'Criar link'}
+          </Button>
+        </div>
+      </form>
     </div>
   );
 };

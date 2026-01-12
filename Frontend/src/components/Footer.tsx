@@ -14,7 +14,7 @@ const Footer = () => {
         </div>
         <div className="flex items-center gap-3 text-sm text-stone-500">
           <a
-            href="https://github.com/yourusername/linkguardiao"
+            href="https://github.com/Lucasantunesribeiro/LinkGuardiao"
             target="_blank"
             rel="noopener noreferrer"
             className="inline-flex items-center gap-2 rounded-full border border-[color:rgb(var(--line))] px-4 py-2 hover:text-ink hover:border-[color:rgb(var(--sea))] transition"

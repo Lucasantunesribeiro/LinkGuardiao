@@ -16,6 +16,21 @@ services:
     depends_on:
       - db
 
+  caddy:
+    image: caddy:2-alpine
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    environment:
+      - DOMAIN_NAME=${DOMAIN_NAME}
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile
+      - caddy_data:/data
+      - caddy_config:/config
+    depends_on:
+      - api
+
   db:
     image: postgres:15-alpine
     restart: unless-stopped
@@ -28,3 +43,5 @@ services:
 
 volumes:
   pgdata:
+  caddy_data:
+  caddy_config:

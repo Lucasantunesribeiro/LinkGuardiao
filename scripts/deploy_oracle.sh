@@ -23,6 +23,7 @@ printf "\nSyncing compose files...\n"
 ssh -i "$SSH_KEY_PATH" "$SSH_USER@$SSH_HOST" "mkdir -p $REMOTE_DIR"
 scp -i "$SSH_KEY_PATH" docker-compose.prod.yml "$SSH_USER@$SSH_HOST:$REMOTE_DIR/docker-compose.prod.yml"
 scp -i "$SSH_KEY_PATH" .env.prod "$SSH_USER@$SSH_HOST:$REMOTE_DIR/.env"
+scp -i "$SSH_KEY_PATH" Caddyfile "$SSH_USER@$SSH_HOST:$REMOTE_DIR/Caddyfile"
 
 printf "\nDeploying...\n"
 ssh -i "$SSH_KEY_PATH" "$SSH_USER@$SSH_HOST" "cd $REMOTE_DIR && docker compose -f docker-compose.prod.yml pull api && docker compose -f docker-compose.prod.yml up -d"

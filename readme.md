@@ -45,10 +45,6 @@ npm run build
 docker compose -f docker-compose.local.yml up --build
 ```
 
-## Deploy
-- Frontend: `docs/DEPLOY_CLOUDFLARE_PAGES.md`
-- Backend: `docs/DEPLOY_ORACLE_ALWAYS_FREE.md`
-
 ## CI/CD
 - CI: `.github/workflows/ci.yml`
 - Deploy manual: `.github/workflows/deploy.yml`

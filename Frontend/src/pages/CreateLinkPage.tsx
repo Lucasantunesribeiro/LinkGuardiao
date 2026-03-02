@@ -24,9 +24,17 @@ const CreateLinkPage = () => {
     if (!originalUrl.trim()) {
       newErrors.originalUrl = 'A URL original é obrigatória';
       isValid = false;
-    } else if (!/^(https?:\/\/)?([\da-z.-]+)\.([a-z.]{2,6})([/\w .-]*)*\/?$/.test(originalUrl)) {
-      newErrors.originalUrl = 'Por favor, insira uma URL válida';
-      isValid = false;
+    } else {
+      try {
+        const parsed = new URL(originalUrl);
+        if (parsed.protocol !== 'http:' && parsed.protocol !== 'https:') {
+          newErrors.originalUrl = 'A URL deve usar o protocolo http ou https';
+          isValid = false;
+        }
+      } catch {
+        newErrors.originalUrl = 'Por favor, insira uma URL válida';
+        isValid = false;
+      }
     }
 
     if (password && password.length < 4) {
@@ -55,13 +63,10 @@ const CreateLinkPage = () => {
         expiresAt: expiresAt ? new Date(expiresAt).toISOString() : null
       };
 
-      const response = await api.post('/links', payload);
-      
-      console.log('Link criado com sucesso:', response.data);
+      await api.post('/links', payload);
       toast.success('Link criado com sucesso!');
       navigate('/dashboard');
     } catch (error: any) {
-      console.error('Erro ao criar link:', error);
       const errorMessage = error.response?.data?.message || 'Ocorreu um erro ao criar o link';
       toast.error(errorMessage);
     } finally {

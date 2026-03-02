@@ -18,7 +18,8 @@ namespace LinkGuardiao.Application.Validation
 
             RuleFor(x => x.Password)
                 .NotEmpty()
-                .MinimumLength(6);
+                .MinimumLength(8)
+                .MaximumLength(128);
         }
     }
 }

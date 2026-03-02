@@ -1,33 +1,34 @@
 using LinkGuardiao.Application.DTOs;
 using LinkGuardiao.Application.Entities;
 using LinkGuardiao.Application.Interfaces;
-using Microsoft.EntityFrameworkCore;
 
 namespace LinkGuardiao.Application.Services
 {
     public class StatsService : IStatsService
     {
-        private readonly IApplicationDbContext _context;
+        private const int MaxAccessItems = 1000;
+        private readonly ILinkRepository _links;
+        private readonly IAccessLogRepository _accessLogs;
 
-        public StatsService(IApplicationDbContext context)
+        public StatsService(ILinkRepository links, IAccessLogRepository accessLogs)
         {
-            _context = context;
+            _links = links;
+            _accessLogs = accessLogs;
         }
 
         public async Task<LinkAccess> RecordAccessAsync(string shortCode, string ipAddress, string? userAgent, string? referrer)
         {
             var now = DateTime.UtcNow;
-            var link = await _context.ShortenedLinks
-                .FirstOrDefaultAsync(l => l.ShortCode == shortCode
-                    && l.IsActive
-                    && (l.ExpiresAt == null || l.ExpiresAt > now));
-
-            if (link == null)
+            var link = await _links.GetByShortCodeAsync(shortCode);
+            if (link == null || !link.IsActive || (link.ExpiresAt.HasValue && link.ExpiresAt.Value <= now))
+            {
                 throw new InvalidOperationException("Link não encontrado");
+            }
 
             var access = new LinkAccess
             {
-                ShortenedLinkId = link.Id,
+                Id = Guid.NewGuid().ToString("N"),
+                ShortCode = shortCode,
                 IpAddress = ipAddress,
                 UserAgent = userAgent,
                 ReferrerUrl = referrer,
@@ -37,6 +38,7 @@ namespace LinkGuardiao.Application.Services
             if (!string.IsNullOrEmpty(userAgent))
             {
                 access.Browser = userAgent.Contains("Firefox") ? "Firefox" :
+                    userAgent.Contains("Edg/") ? "Edge" :
                     userAgent.Contains("Chrome") ? "Chrome" :
                     userAgent.Contains("Safari") ? "Safari" :
                     "Outro";
@@ -51,91 +53,47 @@ namespace LinkGuardiao.Application.Services
                     "Desktop";
             }
 
-            link.ClickCount += 1;
-            _context.LinkAccesses.Add(access);
-            await _context.SaveChangesAsync();
-
+            await _accessLogs.RecordAccessAsync(access);
+            await _links.IncrementClickCountAsync(shortCode);
             return access;
         }
 
-        public async Task<LinkStatsDto> GetLinkStatsAsync(string shortCode, int userId)
+        public async Task<LinkStatsDto> GetLinkStatsAsync(string shortCode, string userId)
         {
-            var link = await _context.ShortenedLinks
-                .Include(l => l.Accesses)
-                .FirstOrDefaultAsync(l => l.ShortCode == shortCode && l.UserId == userId);
-
+            var link = await _links.GetByShortCodeForUserAsync(shortCode, userId);
             if (link == null)
-                throw new InvalidOperationException("Link não encontrado");
-
-            var totalClicks = await GetTotalClicksAsync(link.Id);
-            var browserStats = await GetBrowserStatsAsync(link.Id);
-            var ipStats = await GetIpStatsAsync(link.Id);
-            var clicksByDate = await GetClicksByDateAsync(link.Id);
-
-            return new LinkStatsDto
             {
-                LinkId = link.Id,
-                ShortCode = link.ShortCode,
-                OriginalUrl = link.OriginalUrl,
-                TotalClicks = totalClicks,
-                BrowserStats = browserStats.ToList(),
-                TopIpAddresses = ipStats.ToList(),
-                ClicksByDate = clicksByDate.ToList()
-            };
-        }
+                throw new InvalidOperationException("Link não encontrado");
+            }
 
-        public async Task<int> GetTotalClicksAsync(int linkId)
-        {
-            return await _context.LinkAccesses
-                .CountAsync(a => a.ShortenedLinkId == linkId);
-        }
+            var accessLogs = await _accessLogs.ListAccessesAsync(shortCode, MaxAccessItems);
+            var totalClicks = link.ClickCount;
+            var denominator = accessLogs.Count > 0 ? accessLogs.Count : 1;
 
-        public async Task<IEnumerable<BrowserStatsDto>> GetBrowserStatsAsync(int linkId)
-        {
-            var totalClicks = await GetTotalClicksAsync(linkId);
-            if (totalClicks == 0)
-                return Enumerable.Empty<BrowserStatsDto>();
-
-            var browserStats = await _context.LinkAccesses
-                .Where(a => a.ShortenedLinkId == linkId && a.Browser != null)
-                .GroupBy(a => a.Browser)
+            var browserStats = accessLogs
+                .Where(a => !string.IsNullOrWhiteSpace(a.Browser))
+                .GroupBy(a => a.Browser ?? "Desconhecido")
                 .Select(g => new BrowserStatsDto
                 {
-                    Browser = g.Key ?? "Desconhecido",
+                    Browser = g.Key,
                     Count = g.Count(),
-                    Percentage = (double)g.Count() / totalClicks * 100
+                    Percentage = (double)g.Count() / denominator * 100
                 })
-                .ToListAsync();
+                .ToList();
 
-            return browserStats;
-        }
-
-        public async Task<IEnumerable<IpStatsDto>> GetIpStatsAsync(int linkId)
-        {
-            var totalClicks = await GetTotalClicksAsync(linkId);
-            if (totalClicks == 0)
-                return Enumerable.Empty<IpStatsDto>();
-
-            var ipStats = await _context.LinkAccesses
-                .Where(a => a.ShortenedLinkId == linkId)
+            var ipStats = accessLogs
                 .GroupBy(a => a.IpAddress)
                 .Select(g => new IpStatsDto
                 {
                     IpAddress = g.Key,
                     Count = g.Count(),
-                    Percentage = (double)g.Count() / totalClicks * 100
+                    Percentage = (double)g.Count() / denominator * 100
                 })
                 .OrderByDescending(s => s.Count)
                 .Take(10)
-                .ToListAsync();
+                .ToList();
 
-            return ipStats;
-        }
-
-        public async Task<IEnumerable<DateStatsDto>> GetClicksByDateAsync(int linkId)
-        {
-            var clicksByDate = await _context.LinkAccesses
-                .Where(a => a.ShortenedLinkId == linkId)
+            var clicksByDate = accessLogs
                 .GroupBy(a => a.AccessTime.Date)
                 .Select(g => new DateStatsDto
                 {
@@ -143,9 +101,18 @@ namespace LinkGuardiao.Application.Services
                     Count = g.Count()
                 })
                 .OrderBy(s => s.Date)
-                .ToListAsync();
+                .ToList();
 
-            return clicksByDate;
+            return new LinkStatsDto
+            {
+                LinkId = link.Id,
+                ShortCode = link.ShortCode,
+                OriginalUrl = link.OriginalUrl,
+                TotalClicks = totalClicks,
+                BrowserStats = browserStats,
+                TopIpAddresses = ipStats,
+                ClicksByDate = clicksByDate
+            };
         }
     }
 }

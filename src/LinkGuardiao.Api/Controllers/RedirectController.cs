@@ -1,4 +1,5 @@
 using LinkGuardiao.Application.Interfaces;
+using LinkGuardiao.Application.Security;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
@@ -43,10 +44,16 @@ namespace LinkGuardiao.Api.Controllers
                 _logger.LogWarning(ex, "Failed to record access for {ShortCode}", shortCode);
             }
 
-            return Redirect(link.OriginalUrl);
+            if (!UrlSafety.IsSafeHttpUrl(link.OriginalUrl, out var safeUri))
+            {
+                _logger.LogWarning("Blocked unsafe redirect for {ShortCode}", shortCode);
+                return StatusCode(StatusCodes.Status410Gone, new { message = "Link invalido" });
+            }
+
+            return Redirect(safeUri!.ToString());
         }
 
-        [HttpGet("/{shortCode}")]
+        [HttpGet("/{shortCode:length(6)}")]
         [AllowAnonymous]
         [EnableRateLimiting("redirect")]
         public Task<IActionResult> RedirectToOriginalRoot(string shortCode)

@@ -17,15 +17,9 @@ const DashboardPage = () => {
     const fetchLinks = async () => {
       try {
         const response = await api.get('/links');
-        console.log('Links recebidos:', response.data);
         setLinks(response.data);
         setFetchError(false);
       } catch (error: any) {
-        console.error(
-          'Error fetching links:',
-          error.response?.status,
-          error.response?.data
-        );
         const errorMessage = error.response?.data?.message || 'Erro ao buscar links';
         setFetchError(true);
         toast.error(errorMessage);
@@ -37,7 +31,7 @@ const DashboardPage = () => {
     fetchLinks();
   }, []);
 
-  const handleDelete = async (id: number) => {
+  const handleDelete = async (id: string) => {
     if (!window.confirm('Tem certeza que deseja excluir este link?')) {
       return;
     }
@@ -47,7 +41,6 @@ const DashboardPage = () => {
       setLinks(links.filter(link => link.id !== id));
       toast.success('Link excluído com sucesso!');
     } catch (error: any) {
-      console.error(error);
       const errorMessage = error.response?.data?.message || 'Erro ao excluir link';
       toast.error(errorMessage);
     }

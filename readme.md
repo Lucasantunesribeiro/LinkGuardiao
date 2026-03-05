@@ -2,6 +2,8 @@
 
 Encurtador de URLs com autenticacao, senha e estatisticas, pronto para AWS Serverless.
 
+**Acesse a aplicacao: [https://linkguardiao.pages.dev](https://linkguardiao.pages.dev)**
+
 ## Stack
 - Backend: ASP.NET Core 8, AWS Lambda (Function URL), DynamoDB, JWT, Swagger
 - Frontend: React + Vite + TypeScript + Tailwind

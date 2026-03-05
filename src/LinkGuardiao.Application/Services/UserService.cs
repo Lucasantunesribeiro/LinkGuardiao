@@ -1,25 +1,24 @@
 using LinkGuardiao.Application.DTOs;
 using LinkGuardiao.Application.Entities;
 using LinkGuardiao.Application.Interfaces;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 
 namespace LinkGuardiao.Application.Services
 {
     public class UserService : IUserService
     {
-        private readonly IApplicationDbContext _context;
+        private readonly IUserRepository _users;
         private readonly IPasswordHasher _passwordHasher;
         private readonly IJwtTokenService _jwtTokenService;
         private readonly ILogger<UserService> _logger;
 
         public UserService(
-            IApplicationDbContext context,
+            IUserRepository users,
             IPasswordHasher passwordHasher,
             IJwtTokenService jwtTokenService,
             ILogger<UserService> logger)
         {
-            _context = context;
+            _users = users;
             _passwordHasher = passwordHasher;
             _jwtTokenService = jwtTokenService;
             _logger = logger;
@@ -36,22 +35,22 @@ namespace LinkGuardiao.Application.Services
             var normalizedEmail = userDto.Email.Trim().ToLowerInvariant();
             var normalizedName = userDto.Name.Trim();
 
-            var userExists = await _context.Users.AnyAsync(u => u.Email == normalizedEmail);
-            if (userExists)
+            if (await _users.EmailExistsAsync(normalizedEmail))
             {
+                _logger.LogWarning("Registration blocked for existing email {Email}", normalizedEmail);
                 return new AuthResult { Success = false, Message = "E-mail já cadastrado" };
             }
 
             var user = new User
             {
+                Id = Guid.NewGuid().ToString("N"),
                 Username = normalizedName,
                 Email = normalizedEmail,
                 PasswordHash = _passwordHasher.Hash(userDto.Password),
                 CreatedAt = DateTime.UtcNow,
                 IsAdmin = false
             };
-            _context.Users.Add(user);
-            await _context.SaveChangesAsync();
+            await _users.CreateAsync(user);
 
             var token = _jwtTokenService.GenerateToken(user);
 
@@ -77,9 +76,10 @@ namespace LinkGuardiao.Application.Services
             }
 
             var normalizedEmail = userDto.Email.Trim().ToLowerInvariant();
-            var user = await _context.Users.FirstOrDefaultAsync(u => u.Email == normalizedEmail);
+            var user = await _users.GetByEmailAsync(normalizedEmail);
             if (user == null || !_passwordHasher.Verify(userDto.Password, user.PasswordHash))
             {
+                _logger.LogWarning("Invalid login attempt for {Email}", normalizedEmail);
                 return new AuthResult { Success = false, Message = "Credenciais inválidas" };
             }
 
@@ -98,19 +98,19 @@ namespace LinkGuardiao.Application.Services
             };
         }
 
-        public async Task<User?> GetByIdAsync(int id)
+        public Task<User?> GetByIdAsync(string id)
         {
-            return await _context.Users.FirstOrDefaultAsync(u => u.Id == id);
+            return _users.GetByIdAsync(id);
         }
-        public async Task<bool> IsUsernameUniqueAsync(string username)
+        public Task<bool> IsUsernameUniqueAsync(string username)
         {
-            return !await _context.Users.AnyAsync(u => u.Username == username);
+            return Task.FromResult(true);
         }
 
         public async Task<bool> IsEmailUniqueAsync(string email)
         {
             var normalizedEmail = email.Trim().ToLowerInvariant();
-            return !await _context.Users.AnyAsync(u => u.Email == normalizedEmail);
+            return !await _users.EmailExistsAsync(normalizedEmail);
         }
     }
 }

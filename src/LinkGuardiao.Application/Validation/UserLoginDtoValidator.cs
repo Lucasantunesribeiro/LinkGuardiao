@@ -9,10 +9,12 @@ namespace LinkGuardiao.Application.Validation
         {
             RuleFor(x => x.Email)
                 .NotEmpty()
-                .EmailAddress();
+                .EmailAddress()
+                .MaximumLength(100);
 
             RuleFor(x => x.Password)
-                .NotEmpty();
+                .NotEmpty()
+                .MaximumLength(128);
         }
     }
 }

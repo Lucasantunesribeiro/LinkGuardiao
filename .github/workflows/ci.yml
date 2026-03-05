@@ -34,8 +34,17 @@ jobs:
       - name: Test
         run: dotnet test LinkGuardiao.sln --no-build
 
+      - name: Publish Lambda artifact
+        run: dotnet publish src/LinkGuardiao.Api/LinkGuardiao.Api.csproj -c Release -r linux-x64 --self-contained false -o artifacts/lambda /p:GenerateRuntimeConfigurationFiles=true
+
       - name: Frontend build
         working-directory: Frontend
         run: |
           npm ci
           npm run build
+
+      - name: CDK synth
+        working-directory: infra/cdk
+        run: |
+          npm ci
+          npx cdk synth -c env=dev

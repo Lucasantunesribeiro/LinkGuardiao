@@ -1,0 +1,23 @@
+[Unit]
+Description=LinkGuardiao API
+After=network.target
+
+[Service]
+Type=simple
+WorkingDirectory=/opt/linkguardiao
+EnvironmentFile=/etc/linkguardiao/env
+Environment=ASPNETCORE_URLS=http://127.0.0.1:8080
+ExecStart=/usr/bin/dotnet /opt/linkguardiao/LinkGuardiao.Api.dll
+Restart=always
+RestartSec=5
+User=linkguardiao
+Group=linkguardiao
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=full
+ProtectHome=true
+ReadWritePaths=/var/lib/linkguardiao
+LimitNOFILE=4096
+
+[Install]
+WantedBy=multi-user.target

@@ -6,7 +6,7 @@
 - Output directory: `dist`
 
 ## Environment variables
-- `VITE_API_BASE_URL=https://api.seudominio.com`
+- `VITE_API_BASE_URL=https://<lambda-function-url>`
 
 ## Steps
 1. Acesse Cloudflare Pages e crie um novo projeto.
@@ -15,8 +15,8 @@
 4. Adicione a variavel `VITE_API_BASE_URL`.
 5. Execute o primeiro deploy.
 
-## Custom domain
-1. Em Pages > Custom domains, adicione `app.seudominio.com`.
+## Custom domain (opcional)
+1. Em Pages > Custom domains, adicione seu dominio.
 2. Ajuste o DNS para apontar o CNAME conforme o painel.
 
 ## SPA routing

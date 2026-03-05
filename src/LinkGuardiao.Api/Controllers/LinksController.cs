@@ -1,4 +1,5 @@
 using LinkGuardiao.Application.DTOs;
+using LinkGuardiao.Application.Entities;
 using LinkGuardiao.Application.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -30,13 +31,13 @@ namespace LinkGuardiao.Api.Controllers
                 return Unauthorized();
             }
 
-            var links = await _linkService.GetAllLinksAsync(userId.Value);
+            var links = await _linkService.GetAllLinksAsync(userId);
             return Ok(links);
         }
 
-        [HttpGet("{id:int}")]
+        [HttpGet("{id}")]
         [Authorize]
-        public async Task<IActionResult> GetLink(int id)
+        public async Task<IActionResult> GetLink(string id)
         {
             var userId = GetUserId();
             if (userId == null)
@@ -44,14 +45,14 @@ namespace LinkGuardiao.Api.Controllers
                 return Unauthorized();
             }
 
-            var link = await _linkService.GetLinkByIdAsync(id, userId.Value);
+            var link = await _linkService.GetLinkByIdAsync(id, userId);
             if (link == null)
                 return NotFound();
 
             return Ok(link);
         }
 
-        [HttpGet("{shortCode:length(6)}")]
+        [HttpGet("code/{shortCode:length(6)}")]
         [AllowAnonymous]
         public async Task<IActionResult> GetLinkByShortCode(string shortCode)
         {
@@ -72,13 +73,24 @@ namespace LinkGuardiao.Api.Controllers
                 return Unauthorized();
             }
 
-            var createdLink = await _linkService.CreateLinkAsync(linkDto, userId.Value);
-            return CreatedAtAction(nameof(GetLink), new { id = createdLink.Id }, createdLink);
+            try
+            {
+                var createdLink = await _linkService.CreateLinkAsync(linkDto, userId);
+                return CreatedAtAction(nameof(GetLink), new { id = createdLink.Id }, createdLink);
+            }
+            catch (InvalidOperationException ex) when (ex.Message.Contains("limit", StringComparison.OrdinalIgnoreCase))
+            {
+                return StatusCode(StatusCodes.Status429TooManyRequests, new { message = ex.Message });
+            }
+            catch (InvalidOperationException ex)
+            {
+                return BadRequest(new { message = ex.Message });
+            }
         }
 
-        [HttpPut("{id:int}")]
+        [HttpPut("{id}")]
         [Authorize]
-        public async Task<IActionResult> UpdateLink(int id, LinkUpdateDto linkDto)
+        public async Task<IActionResult> UpdateLink(string id, LinkUpdateDto linkDto)
         {
             var userId = GetUserId();
             if (userId == null)
@@ -86,16 +98,24 @@ namespace LinkGuardiao.Api.Controllers
                 return Unauthorized();
             }
 
-            var link = await _linkService.UpdateLinkAsync(id, linkDto, userId.Value);
+            ShortenedLink? link;
+            try
+            {
+                link = await _linkService.UpdateLinkAsync(id, linkDto, userId);
+            }
+            catch (InvalidOperationException ex)
+            {
+                return BadRequest(new { message = ex.Message });
+            }
             if (link == null)
                 return NotFound();
 
             return Ok(link);
         }
 
-        [HttpDelete("{id:int}")]
+        [HttpDelete("{id}")]
         [Authorize]
-        public async Task<IActionResult> DeleteLink(int id)
+        public async Task<IActionResult> DeleteLink(string id)
         {
             var userId = GetUserId();
             if (userId == null)
@@ -103,17 +123,17 @@ namespace LinkGuardiao.Api.Controllers
                 return Unauthorized();
             }
 
-            var result = await _linkService.DeleteLinkAsync(id, userId.Value);
+            var result = await _linkService.DeleteLinkAsync(id, userId);
             if (!result)
                 return NotFound();
 
             return NoContent();
         }
 
-        [HttpGet("{id:int}/stats")]
+        [HttpGet("{id}/stats")]
         [Authorize]
         [EnableRateLimiting("stats")]
-        public async Task<IActionResult> GetLinkStatsById(int id)
+        public async Task<IActionResult> GetLinkStatsById(string id)
         {
             var userId = GetUserId();
             if (userId == null)
@@ -121,13 +141,13 @@ namespace LinkGuardiao.Api.Controllers
                 return Unauthorized();
             }
 
-            var link = await _linkService.GetLinkByIdAsync(id, userId.Value);
+            var link = await _linkService.GetLinkByIdAsync(id, userId);
             if (link == null)
                 return NotFound();
 
             try
             {
-                var stats = await _statsService.GetLinkStatsAsync(link.ShortCode, userId.Value);
+                var stats = await _statsService.GetLinkStatsAsync(link.ShortCode, userId);
                 return Ok(stats);
             }
             catch (InvalidOperationException)
@@ -148,7 +168,7 @@ namespace LinkGuardiao.Api.Controllers
 
             try
             {
-                var stats = await _statsService.GetLinkStatsAsync(shortCode, userId.Value);
+                var stats = await _statsService.GetLinkStatsAsync(shortCode, userId);
                 return Ok(stats);
             }
             catch (InvalidOperationException)
@@ -162,6 +182,11 @@ namespace LinkGuardiao.Api.Controllers
         [EnableRateLimiting("auth")]
         public async Task<IActionResult> VerifyPassword(string shortCode, [FromBody] string password)
         {
+            if (string.IsNullOrWhiteSpace(password))
+            {
+                return BadRequest(new { message = "Password is required." });
+            }
+
             var isValid = await _linkService.VerifyLinkPasswordAsync(shortCode, password);
 
             if (!isValid)
@@ -170,10 +195,10 @@ namespace LinkGuardiao.Api.Controllers
             return Ok();
         }
 
-        private int? GetUserId()
+        private string? GetUserId()
         {
             var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-            return int.TryParse(userIdClaim, out var id) ? id : null;
+            return string.IsNullOrWhiteSpace(userIdClaim) ? null : userIdClaim;
         }
     }
 }

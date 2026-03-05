@@ -6,7 +6,7 @@ namespace LinkGuardiao.Application.Entities
     public class User
     {
         [Key]
-        public int Id { get; set; }
+        public string Id { get; set; } = string.Empty;
         
         [Required]
         [MaxLength(100)]
@@ -17,14 +17,11 @@ namespace LinkGuardiao.Application.Entities
         public string Email { get; set; } = string.Empty;
         
         [Required]
+        [JsonIgnore]
         public string PasswordHash { get; set; } = string.Empty;
         
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
         
         public bool IsAdmin { get; set; } = false;
-        
-        // Navigation property
-        [JsonIgnore]
-        public ICollection<ShortenedLink> ShortenedLinks { get; set; } = new List<ShortenedLink>();
     }
 }

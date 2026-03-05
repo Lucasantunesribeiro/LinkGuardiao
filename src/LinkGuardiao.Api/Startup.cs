@@ -333,11 +333,7 @@ namespace LinkGuardiao.Api
             }
 
             app.UseRouting();
-            var isLambda = !string.IsNullOrWhiteSpace(Environment.GetEnvironmentVariable("AWS_LAMBDA_FUNCTION_NAME"));
-            if (!isLambda)
-            {
-                app.UseCors("CorsPolicy");
-            }
+            app.UseCors("CorsPolicy");
             app.UseRateLimiter();
             app.UseAuthentication();
             app.UseAuthorization();

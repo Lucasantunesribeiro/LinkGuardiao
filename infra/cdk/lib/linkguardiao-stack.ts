@@ -109,19 +109,10 @@ export class LinkGuardiaoStack extends cdk.Stack {
     accessTable.grantReadWriteData(apiFunction);
     dailyLimitsTable.grantReadWriteData(apiFunction);
 
+    // CORS is handled by ASP.NET Core middleware, not Lambda Function URL.
+    // This avoids the Lambda URL intercepting OPTIONS preflight with stale origins.
     const functionUrl = apiFunction.addFunctionUrl({
       authType: lambda.FunctionUrlAuthType.NONE,
-      cors: {
-        allowedOrigins: [corsAllowedOrigin],
-        allowedMethods: [
-          lambda.HttpMethod.GET,
-          lambda.HttpMethod.POST,
-          lambda.HttpMethod.PUT,
-          lambda.HttpMethod.DELETE,
-        ],
-        allowedHeaders: ['Content-Type', 'Authorization', 'Accept', 'X-Request-Id'],
-        maxAge: cdk.Duration.hours(1),
-      },
     });
 
     new cdk.CfnOutput(this, 'FunctionUrl', {

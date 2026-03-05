@@ -11,6 +11,7 @@ infra/cdk/cdk.out/
 # .NET
 bin/
 obj/
+!infra/cdk/bin/
 *.db
 appsettings.Local.json
 

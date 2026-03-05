@@ -21,10 +21,10 @@ namespace LinkGuardiao.Api.Controllers
         public async Task<IActionResult> GetCurrentUser()
         {
             var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-            if (string.IsNullOrEmpty(userId) || !int.TryParse(userId, out var parsedId))
+            if (string.IsNullOrEmpty(userId))
                 return Unauthorized();
 
-            var user = await _userService.GetByIdAsync(parsedId);
+            var user = await _userService.GetByIdAsync(userId);
             if (user == null)
                 return NotFound();
 

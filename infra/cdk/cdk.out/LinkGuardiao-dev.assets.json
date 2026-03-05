@@ -1,0 +1,36 @@
+{
+  "version": "48.0.0",
+  "files": {
+    "acd135c5ee90301b8f47b639b46d91f7dcfc9a65316df8f512c8185bca8c8a17": {
+      "displayName": "ApiFunction/Code",
+      "source": {
+        "path": "asset.acd135c5ee90301b8f47b639b46d91f7dcfc9a65316df8f512c8185bca8c8a17",
+        "packaging": "zip"
+      },
+      "destinations": {
+        "212051644015-us-east-1-a4f2add8": {
+          "bucketName": "cdk-hnb659fds-assets-212051644015-us-east-1",
+          "objectKey": "acd135c5ee90301b8f47b639b46d91f7dcfc9a65316df8f512c8185bca8c8a17.zip",
+          "region": "us-east-1",
+          "assumeRoleArn": "arn:${AWS::Partition}:iam::212051644015:role/cdk-hnb659fds-file-publishing-role-212051644015-us-east-1"
+        }
+      }
+    },
+    "1ca84ea5040359eb5e1e21f629f34f56086446600c98309511f0be7f1e47a4da": {
+      "displayName": "LinkGuardiao-dev Template",
+      "source": {
+        "path": "LinkGuardiao-dev.template.json",
+        "packaging": "file"
+      },
+      "destinations": {
+        "212051644015-us-east-1-00e3968c": {
+          "bucketName": "cdk-hnb659fds-assets-212051644015-us-east-1",
+          "objectKey": "1ca84ea5040359eb5e1e21f629f34f56086446600c98309511f0be7f1e47a4da.json",
+          "region": "us-east-1",
+          "assumeRoleArn": "arn:${AWS::Partition}:iam::212051644015:role/cdk-hnb659fds-file-publishing-role-212051644015-us-east-1"
+        }
+      }
+    }
+  },
+  "dockerImages": {}
+}

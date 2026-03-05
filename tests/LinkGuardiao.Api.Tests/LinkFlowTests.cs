@@ -57,7 +57,7 @@ namespace LinkGuardiao.Api.Tests
         }
 
         private sealed record AuthResponse(string Token);
-        private sealed record LinkResponse(int Id, string ShortCode);
+        private sealed record LinkResponse(string Id, string ShortCode);
         private sealed record LinkStatsResponse(int TotalClicks);
     }
 }

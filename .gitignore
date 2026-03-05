@@ -1,6 +1,8 @@
 # Node
 node_modules/
 dist/
+infra/cdk/node_modules/
+infra/cdk/dist/
 .env
 *.log
 
@@ -14,7 +16,6 @@ appsettings.Local.json
 Frontend/node_modules/
 Frontend/dist/
 Frontend/.env
-Frontend/package-lock.json
 
 # Backend (legacy)
 Backend/bin/
@@ -29,4 +30,14 @@ docker-compose.override.yml
 # Other
 *.zip
 *.tar
+artifacts/
 uploads/*
+
+
+#Oracle
+oracle/ 
+
+#Claude
+.claude/
+claude.md
+!CLAUDE.md

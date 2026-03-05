@@ -1,17 +1,12 @@
 using System.ComponentModel.DataAnnotations;
-using System.Text.Json.Serialization;
-
 namespace LinkGuardiao.Application.Entities
 {
     public class LinkAccess
     {
         [Key]
-        public int Id { get; set; }
-        
-        public int ShortenedLinkId { get; set; }
-        
-        [JsonIgnore]
-        public ShortenedLink ShortenedLink { get; set; } = null!;
+        public string Id { get; set; } = string.Empty;
+
+        public string ShortCode { get; set; } = string.Empty;
         
         [Required]
         [MaxLength(45)]

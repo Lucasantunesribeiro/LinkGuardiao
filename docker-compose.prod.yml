@@ -5,43 +5,16 @@ services:
     environment:
       ASPNETCORE_ENVIRONMENT: Production
       ConnectionStrings__Default: ${CONNECTIONSTRINGS__DEFAULT}
-      Database__Provider: Postgres
       Jwt__Secret: ${JWT__SECRET}
       Jwt__Issuer: ${JWT__ISSUER:-LinkGuardiao}
       Jwt__Audience: ${JWT__AUDIENCE:-LinkGuardiao}
       Cors__AllowedOrigins__0: ${CORS__ALLOWEDORIGINS__0}
+      LinkLimits__DailyUserCreateLimit: ${LINKLIMITS__DAILYUSERCREATELIMIT:-100}
       Seed__Enable: "false"
     ports:
       - "8080:8080"
-    depends_on:
-      - db
-
-  caddy:
-    image: caddy:2-alpine
-    restart: unless-stopped
-    ports:
-      - "80:80"
-      - "443:443"
-    environment:
-      - DOMAIN_NAME=${DOMAIN_NAME}
     volumes:
-      - ./Caddyfile:/etc/caddy/Caddyfile
-      - caddy_data:/data
-      - caddy_config:/config
-    depends_on:
-      - api
-
-  db:
-    image: postgres:15-alpine
-    restart: unless-stopped
-    environment:
-      POSTGRES_DB: ${POSTGRES_DB:-linkguardiao}
-      POSTGRES_USER: ${POSTGRES_USER:-postgres}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
-    volumes:
-      - pgdata:/var/lib/postgresql/data
+      - linkguardiao_data:/var/lib/linkguardiao
 
 volumes:
-  pgdata:
-  caddy_data:
-  caddy_config:
+  linkguardiao_data:

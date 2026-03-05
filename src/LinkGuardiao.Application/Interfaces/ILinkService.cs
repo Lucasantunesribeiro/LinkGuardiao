@@ -5,12 +5,12 @@ namespace LinkGuardiao.Application.Interfaces
 {
     public interface ILinkService
     {
-        Task<IEnumerable<ShortenedLink>> GetAllLinksAsync(int userId);
-        Task<ShortenedLink?> GetLinkByIdAsync(int id, int userId);
+        Task<IEnumerable<ShortenedLink>> GetAllLinksAsync(string userId);
+        Task<ShortenedLink?> GetLinkByIdAsync(string id, string userId);
         Task<ShortenedLink?> GetLinkByShortCodeAsync(string shortCode);
-        Task<ShortenedLink> CreateLinkAsync(LinkCreateDto linkDto, int userId);
-        Task<ShortenedLink?> UpdateLinkAsync(int id, LinkUpdateDto linkDto, int userId);
-        Task<bool> DeleteLinkAsync(int id, int userId);
+        Task<ShortenedLink> CreateLinkAsync(LinkCreateDto linkDto, string userId);
+        Task<ShortenedLink?> UpdateLinkAsync(string id, LinkUpdateDto linkDto, string userId);
+        Task<bool> DeleteLinkAsync(string id, string userId);
         Task<bool> VerifyLinkPasswordAsync(string shortCode, string password);
         Task<string> GenerateUniqueShortCodeAsync();
     }

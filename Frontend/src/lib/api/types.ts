@@ -1,5 +1,5 @@
 export interface UserDto {
-  id: number;
+  id: string;
   username: string;
   email: string;
 }
@@ -12,7 +12,7 @@ export interface AuthResult {
 }
 
 export interface ShortenedLink {
-  id: number;
+  id: string;
   originalUrl: string;
   shortCode: string;
   title?: string | null;
@@ -40,7 +40,7 @@ export interface DateStatsDto {
 }
 
 export interface LinkStatsDto {
-  linkId: number;
+  linkId: string;
   shortCode: string;
   originalUrl: string;
   totalClicks: number;

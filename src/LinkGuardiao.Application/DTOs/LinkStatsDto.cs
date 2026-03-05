@@ -2,7 +2,7 @@ namespace LinkGuardiao.Application.DTOs
 {
     public class LinkStatsDto
     {
-        public int LinkId { get; set; }
+        public string LinkId { get; set; } = string.Empty;
         public string ShortCode { get; set; } = string.Empty;
         public string OriginalUrl { get; set; } = string.Empty;
         public int TotalClicks { get; set; }

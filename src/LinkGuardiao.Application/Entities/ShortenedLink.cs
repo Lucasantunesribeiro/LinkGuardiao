@@ -1,17 +1,13 @@
 using System.ComponentModel.DataAnnotations;
 using System.Text.Json.Serialization;
-
 namespace LinkGuardiao.Application.Entities
 {
     public class ShortenedLink
     {
         [Key]
-        public int Id { get; set; }
-        
-        public int UserId { get; set; }
-        
-        [JsonIgnore]
-        public User User { get; set; } = null!;
+        public string Id { get; set; } = string.Empty;
+
+        public string UserId { get; set; } = string.Empty;
         
         [Required]
         [MaxLength(2000)]
@@ -24,6 +20,7 @@ namespace LinkGuardiao.Application.Entities
         [MaxLength(100)]
         public string? Title { get; set; }
         
+        [JsonIgnore]
         public string? PasswordHash { get; set; }
         
         public bool IsPasswordProtected => !string.IsNullOrEmpty(PasswordHash);
@@ -35,9 +32,5 @@ namespace LinkGuardiao.Application.Entities
         public bool IsActive { get; set; } = true;
         
         public int ClickCount { get; set; } = 0;
-        
-        // Navigation property
-        [JsonIgnore]
-        public ICollection<LinkAccess> Accesses { get; set; } = new List<LinkAccess>();
     }
 }

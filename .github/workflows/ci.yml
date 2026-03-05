@@ -39,6 +39,8 @@ jobs:
 
       - name: Frontend build
         working-directory: Frontend
+        env:
+          VITE_API_BASE_URL: ${{ secrets.VITE_API_BASE_URL }}
         run: |
           npm ci
           npm run build
@@ -48,3 +50,13 @@ jobs:
         run: |
           npm ci
           npx cdk synth -c env=dev
+
+      - name: Deploy to Cloudflare Pages
+        if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+        uses: cloudflare/pages-action@v1
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          projectName: linkguardiao
+          directory: Frontend/dist
+          gitHubToken: ${{ secrets.GITHUB_TOKEN }}

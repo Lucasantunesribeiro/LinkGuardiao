@@ -3,6 +3,7 @@ node_modules/
 dist/
 infra/cdk/node_modules/
 infra/cdk/dist/
+infra/cdk/cdk.out/
 .env
 *.log
 

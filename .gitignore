@@ -5,6 +5,7 @@ infra/cdk/node_modules/
 infra/cdk/dist/
 infra/cdk/cdk.out/
 .env
+.env.prod
 *.log
 
 # .NET

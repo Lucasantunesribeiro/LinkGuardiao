@@ -1,3 +1,4 @@
+using System.Collections.Concurrent;
 using LinkGuardiao.Application.Entities;
 using LinkGuardiao.Application.Interfaces;
 
@@ -134,6 +135,39 @@ namespace LinkGuardiao.Api.Tests
         public Task<bool> TryConsumeAsync(string userId, int limit, CancellationToken cancellationToken = default)
         {
             return Task.FromResult(true);
+        }
+    }
+
+    // Simulates the SQS consumer by processing messages synchronously in tests
+    public sealed class InMemoryAnalyticsQueue : IAnalyticsQueue
+    {
+        private readonly IAccessLogRepository _accessLogs;
+        private readonly ILinkRepository _links;
+        public ConcurrentBag<AccessLogMessage> Messages { get; } = new();
+
+        public InMemoryAnalyticsQueue(IAccessLogRepository accessLogs, ILinkRepository links)
+        {
+            _accessLogs = accessLogs;
+            _links = links;
+        }
+
+        public async Task EnqueueAsync(AccessLogMessage message, CancellationToken ct = default)
+        {
+            Messages.Add(message);
+            var access = new LinkAccess
+            {
+                Id = message.Id,
+                ShortCode = message.ShortCode,
+                IpAddress = message.IpAddress,
+                UserAgent = message.UserAgent,
+                ReferrerUrl = message.ReferrerUrl,
+                Browser = message.Browser,
+                OperatingSystem = message.OperatingSystem,
+                DeviceType = message.DeviceType,
+                AccessTime = message.AccessTime
+            };
+            await _accessLogs.RecordAccessAsync(access, ct);
+            await _links.IncrementClickCountAsync(message.ShortCode, ct);
         }
     }
 

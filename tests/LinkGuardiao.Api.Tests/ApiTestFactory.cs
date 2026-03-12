@@ -49,12 +49,18 @@ namespace LinkGuardiao.Api.Tests
                 services.RemoveAll(typeof(IAccessLogRepository));
                 services.RemoveAll(typeof(IDailyLimitStore));
                 services.RemoveAll(typeof(IRefreshTokenRepository));
+                services.RemoveAll(typeof(IAnalyticsQueue));
+                services.RemoveAll(typeof(Amazon.SQS.IAmazonSQS));
 
                 services.AddSingleton<ILinkRepository, InMemoryLinkRepository>();
                 services.AddSingleton<IUserRepository, InMemoryUserRepository>();
                 services.AddSingleton<IAccessLogRepository, InMemoryAccessLogRepository>();
                 services.AddSingleton<IDailyLimitStore, AllowAllDailyLimitStore>();
                 services.AddSingleton<IRefreshTokenRepository, InMemoryRefreshTokenRepository>();
+                // InMemoryAnalyticsQueue auto-injects IAccessLogRepository and ILinkRepository
+                services.AddSingleton<InMemoryAnalyticsQueue>();
+                services.AddSingleton<IAnalyticsQueue>(sp => sp.GetRequiredService<InMemoryAnalyticsQueue>());
+
             });
         }
     }

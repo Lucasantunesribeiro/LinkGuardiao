@@ -1,3 +1,4 @@
+using LinkGuardiao.Application.Entities;
 using LinkGuardiao.Application.Interfaces;
 using LinkGuardiao.Application.Security;
 using Microsoft.AspNetCore.Authorization;
@@ -10,13 +11,13 @@ namespace LinkGuardiao.Api.Controllers
     public class RedirectController : ControllerBase
     {
         private readonly ILinkService _linkService;
-        private readonly IStatsService _statsService;
+        private readonly IAnalyticsQueue _analyticsQueue;
         private readonly ILogger<RedirectController> _logger;
 
-        public RedirectController(ILinkService linkService, IStatsService statsService, ILogger<RedirectController> logger)
+        public RedirectController(ILinkService linkService, IAnalyticsQueue analyticsQueue, ILogger<RedirectController> logger)
         {
             _linkService = linkService;
-            _statsService = statsService;
+            _analyticsQueue = analyticsQueue;
             _logger = logger;
         }
 
@@ -47,11 +48,36 @@ namespace LinkGuardiao.Api.Controllers
                 var userAgent = Request.Headers.UserAgent.ToString();
                 var referrer = Request.Headers.Referer.ToString();
 
-                await _statsService.RecordAccessAsync(shortCode, ipAddress, userAgent, referrer);
+                var message = new AccessLogMessage
+                {
+                    Id = Guid.NewGuid().ToString("N"),
+                    ShortCode = shortCode,
+                    IpAddress = ipAddress,
+                    UserAgent = userAgent,
+                    ReferrerUrl = referrer,
+                    AccessTime = DateTime.UtcNow
+                };
+
+                if (!string.IsNullOrEmpty(userAgent))
+                {
+                    message.Browser = userAgent.Contains("Firefox") ? "Firefox" :
+                        userAgent.Contains("Edg/") ? "Edge" :
+                        userAgent.Contains("Chrome") ? "Chrome" :
+                        userAgent.Contains("Safari") ? "Safari" : "Outro";
+
+                    message.OperatingSystem = userAgent.Contains("Windows") ? "Windows" :
+                        userAgent.Contains("Mac") ? "MacOS" :
+                        userAgent.Contains("Linux") ? "Linux" : "Outro";
+
+                    message.DeviceType = userAgent.Contains("Mobile") ? "Mobile" :
+                        userAgent.Contains("Tablet") ? "Tablet" : "Desktop";
+                }
+
+                await _analyticsQueue.EnqueueAsync(message);
             }
             catch (Exception ex)
             {
-                _logger.LogWarning(ex, "Failed to record access for {ShortCode}", shortCode);
+                _logger.LogWarning(ex, "Failed to enqueue analytics for {ShortCode}", shortCode);
             }
 
             if (!UrlSafety.IsSafeHttpUrl(link.OriginalUrl, out var safeUri))

@@ -3,6 +3,7 @@ using System.Net.Http.Headers;
 using System.Net.Http.Json;
 using System.Text.Json;
 using Microsoft.AspNetCore.Mvc.Testing;
+using Microsoft.Extensions.DependencyInjection;
 using Xunit;
 
 namespace LinkGuardiao.Api.Tests
@@ -10,9 +11,11 @@ namespace LinkGuardiao.Api.Tests
     public class LinkFlowTests : IClassFixture<ApiTestFactory>
     {
         private readonly HttpClient _client;
+        private readonly ApiTestFactory _factory;
 
         public LinkFlowTests(ApiTestFactory factory)
         {
+            _factory = factory;
             _client = factory.CreateClient(new WebApplicationFactoryClientOptions
             {
                 AllowAutoRedirect = false
@@ -145,6 +148,31 @@ namespace LinkGuardiao.Api.Tests
             request.Headers.Add("X-Link-Password", "rightpass1234");
             var redirectResponse = await _client.SendAsync(request);
             Assert.Equal(HttpStatusCode.Redirect, redirectResponse.StatusCode);
+        }
+
+        [Fact]
+        public async Task Redirect_EnqueuesAccessMessageAndReturns302()
+        {
+            var auth = await RegisterAndLoginAsync("redirect-queue@example.com");
+            _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", auth.Token);
+
+            var createResponse = await _client.PostAsJsonAsync("/api/links", new
+            {
+                originalUrl = "https://example.com",
+                title = "Queue Test"
+            });
+            Assert.Equal(HttpStatusCode.Created, createResponse.StatusCode);
+            var link = await createResponse.Content.ReadFromJsonAsync<LinkResponse>();
+
+            _client.DefaultRequestHeaders.Authorization = null;
+
+            var queue = _factory.Services.GetRequiredService<InMemoryAnalyticsQueue>();
+            var before = queue.Messages.Count;
+
+            var redirectResponse = await _client.GetAsync($"/{link!.ShortCode}");
+            Assert.Equal(HttpStatusCode.Redirect, redirectResponse.StatusCode);
+            Assert.Equal(before + 1, queue.Messages.Count);
+            Assert.Equal(link.ShortCode, queue.Messages.Last().ShortCode);
         }
 
         [Fact]

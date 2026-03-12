@@ -11,7 +11,9 @@ using LinkGuardiao.Application.Options;
 using LinkGuardiao.Application.Services;
 using LinkGuardiao.Application.Validation;
 using LinkGuardiao.Infrastructure.Data;
+using LinkGuardiao.Infrastructure.Messaging;
 using LinkGuardiao.Infrastructure.Options;
+using Amazon.SQS;
 using LinkGuardiao.Infrastructure.Security;
 using Amazon.DynamoDBv2;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -290,6 +292,18 @@ namespace LinkGuardiao.Api
             }
 
             services.AddAWSService<IAmazonDynamoDB>();
+            services.AddAWSService<IAmazonSQS>();
+
+            var sqsQueueUrl = _configuration["SQS_ANALYTICS_QUEUE_URL"];
+            services.Configure<SqsOptions>(options => options.AnalyticsQueueUrl = sqsQueueUrl ?? string.Empty);
+            if (!string.IsNullOrWhiteSpace(sqsQueueUrl))
+            {
+                services.AddSingleton<IAnalyticsQueue, SqsAnalyticsQueue>();
+            }
+            else
+            {
+                services.AddSingleton<IAnalyticsQueue, NoOpAnalyticsQueue>();
+            }
             services.AddSingleton<ILinkRepository, DynamoDbLinkRepository>();
             services.AddSingleton<IUserRepository, DynamoDbUserRepository>();
             services.AddSingleton<IAccessLogRepository, DynamoDbAccessLogRepository>();

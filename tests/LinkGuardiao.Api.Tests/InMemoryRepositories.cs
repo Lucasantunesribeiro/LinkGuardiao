@@ -1,5 +1,6 @@
 using System.Collections.Concurrent;
 using LinkGuardiao.Application.Entities;
+using LinkGuardiao.Application.Exceptions;
 using LinkGuardiao.Application.Interfaces;
 
 namespace LinkGuardiao.Api.Tests
@@ -103,6 +104,8 @@ namespace LinkGuardiao.Api.Tests
 
         public Task CreateAsync(User user, CancellationToken cancellationToken = default)
         {
+            if (_userIdByEmail.ContainsKey(user.Email))
+                throw new UserExistsException();
             _usersById[user.Id] = user;
             _userIdByEmail[user.Email] = user.Id;
             return Task.CompletedTask;

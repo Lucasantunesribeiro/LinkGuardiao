@@ -2,6 +2,7 @@ using System.Globalization;
 using Amazon.DynamoDBv2;
 using Amazon.DynamoDBv2.Model;
 using LinkGuardiao.Application.Entities;
+using LinkGuardiao.Application.Exceptions;
 using LinkGuardiao.Application.Interfaces;
 using LinkGuardiao.Infrastructure.Options;
 using Microsoft.Extensions.Options;
@@ -70,24 +71,60 @@ namespace LinkGuardiao.Infrastructure.Data
             return response.Count > 0;
         }
 
-        public Task CreateAsync(User user, CancellationToken cancellationToken = default)
+        public async Task CreateAsync(User user, CancellationToken cancellationToken = default)
         {
-            var request = new PutItemRequest
+            var transactItems = new List<TransactWriteItem>
             {
-                TableName = _options.UsersTableName,
-                Item = new Dictionary<string, AttributeValue>
+                // Write user record — fails if userId already exists
+                new TransactWriteItem
                 {
-                    ["userId"] = new AttributeValue { S = user.Id },
-                    ["email"] = new AttributeValue { S = user.Email },
-                    ["username"] = new AttributeValue { S = user.Username },
-                    ["passwordHash"] = new AttributeValue { S = user.PasswordHash },
-                    ["createdAt"] = new AttributeValue { S = user.CreatedAt.ToString("O", CultureInfo.InvariantCulture) },
-                    ["isAdmin"] = new AttributeValue { BOOL = user.IsAdmin }
-                },
-                ConditionExpression = "attribute_not_exists(userId)"
+                    Put = new Put
+                    {
+                        TableName = _options.UsersTableName,
+                        Item = new Dictionary<string, AttributeValue>
+                        {
+                            ["userId"] = new AttributeValue { S = user.Id },
+                            ["email"] = new AttributeValue { S = user.Email },
+                            ["username"] = new AttributeValue { S = user.Username },
+                            ["passwordHash"] = new AttributeValue { S = user.PasswordHash },
+                            ["createdAt"] = new AttributeValue { S = user.CreatedAt.ToString("O", CultureInfo.InvariantCulture) },
+                            ["isAdmin"] = new AttributeValue { BOOL = user.IsAdmin }
+                        },
+                        ConditionExpression = "attribute_not_exists(userId)"
+                    }
+                }
             };
 
-            return _dynamoDb.PutItemAsync(request, cancellationToken);
+            // If EmailLocksTableName is configured, add an email-lock item to enforce
+            // uniqueness atomically (prevents TOCTOU between EmailExistsAsync + CreateAsync)
+            if (!string.IsNullOrWhiteSpace(_options.EmailLocksTableName))
+            {
+                transactItems.Add(new TransactWriteItem
+                {
+                    Put = new Put
+                    {
+                        TableName = _options.EmailLocksTableName,
+                        Item = new Dictionary<string, AttributeValue>
+                        {
+                            ["email"] = new AttributeValue { S = user.Email }
+                        },
+                        ConditionExpression = "attribute_not_exists(email)"
+                    }
+                });
+            }
+
+            try
+            {
+                await _dynamoDb.TransactWriteItemsAsync(new TransactWriteItemsRequest
+                {
+                    TransactItems = transactItems
+                }, cancellationToken);
+            }
+            catch (TransactionCanceledException ex)
+                when (ex.CancellationReasons.Any(r => r.Code == "ConditionalCheckFailed"))
+            {
+                throw new UserExistsException();
+            }
         }
 
         private static User MapUser(Dictionary<string, AttributeValue> item)

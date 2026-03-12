@@ -1,5 +1,6 @@
 using LinkGuardiao.Application.DTOs;
 using LinkGuardiao.Application.Entities;
+using LinkGuardiao.Application.Exceptions;
 using LinkGuardiao.Application.Interfaces;
 using LinkGuardiao.Application.Options;
 using Microsoft.Extensions.Logging;
@@ -43,12 +44,6 @@ namespace LinkGuardiao.Application.Services
             var normalizedEmail = userDto.Email.Trim().ToLowerInvariant();
             var normalizedName = userDto.Name.Trim();
 
-            if (await _users.EmailExistsAsync(normalizedEmail))
-            {
-                _logger.LogWarning("Registration blocked for existing email {Email}", normalizedEmail);
-                return new AuthResult { Success = false, Message = "E-mail já cadastrado" };
-            }
-
             var user = new User
             {
                 Id = Guid.NewGuid().ToString("N"),
@@ -58,7 +53,16 @@ namespace LinkGuardiao.Application.Services
                 CreatedAt = DateTime.UtcNow,
                 IsAdmin = false
             };
-            await _users.CreateAsync(user);
+
+            try
+            {
+                await _users.CreateAsync(user);
+            }
+            catch (UserExistsException)
+            {
+                _logger.LogWarning("Registration blocked for existing email {Email}", normalizedEmail);
+                return new AuthResult { Success = false, Message = "E-mail já cadastrado" };
+            }
 
             var token = _jwtTokenService.GenerateToken(user);
             var (rawRefresh, refreshEntity) = await CreateRefreshTokenAsync(user.Id);

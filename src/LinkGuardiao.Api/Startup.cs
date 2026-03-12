@@ -268,6 +268,7 @@ namespace LinkGuardiao.Api
                 AccessTableName = _configuration["DDB_TABLE_ACCESS"] ?? _configuration["DynamoDb:AccessTableName"] ?? string.Empty,
                 DailyLimitsTableName = _configuration["DDB_TABLE_DAILY_LIMITS"] ?? _configuration["DynamoDb:DailyLimitsTableName"] ?? string.Empty,
                 RefreshTokensTableName = _configuration["DDB_TABLE_REFRESH_TOKENS"] ?? _configuration["DynamoDb:RefreshTokensTableName"] ?? string.Empty,
+                EmailLocksTableName = _configuration["DDB_TABLE_EMAIL_LOCKS"] ?? _configuration["DynamoDb:EmailLocksTableName"] ?? string.Empty,
                 AccessRetentionDays = _configuration.GetValue<int?>("DynamoDb:AccessRetentionDays") ?? 30
             };
 
@@ -278,6 +279,7 @@ namespace LinkGuardiao.Api
                 options.AccessTableName = dynamoOptions.AccessTableName;
                 options.DailyLimitsTableName = dynamoOptions.DailyLimitsTableName;
                 options.RefreshTokensTableName = dynamoOptions.RefreshTokensTableName;
+                options.EmailLocksTableName = dynamoOptions.EmailLocksTableName;
                 options.AccessRetentionDays = dynamoOptions.AccessRetentionDays;
             });
 

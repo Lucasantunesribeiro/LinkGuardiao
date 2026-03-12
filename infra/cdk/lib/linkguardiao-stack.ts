@@ -90,6 +90,13 @@ export class LinkGuardiaoStack extends cdk.Stack {
       projectionType: dynamodb.ProjectionType.ALL,
     });
 
+    const emailLocksTable = new dynamodb.Table(this, 'EmailLocksTable', {
+      tableName: `linkguardiao-email-locks-${envName}`,
+      partitionKey: { name: 'email', type: dynamodb.AttributeType.STRING },
+      billingMode: dynamodb.BillingMode.PAY_PER_REQUEST,
+      removalPolicy: isProd ? cdk.RemovalPolicy.RETAIN : cdk.RemovalPolicy.DESTROY,
+    });
+
     // ─── SQS Analytics Queue ─────────────────────────────────────────────────
 
     const analyticsDlq = new sqs.Queue(this, 'AnalyticsDlq', {
@@ -150,6 +157,7 @@ export class LinkGuardiaoStack extends cdk.Stack {
         DDB_TABLE_ACCESS: accessTable.tableName,
         DDB_TABLE_DAILY_LIMITS: dailyLimitsTable.tableName,
         DDB_TABLE_REFRESH_TOKENS: refreshTokensTable.tableName,
+        DDB_TABLE_EMAIL_LOCKS: emailLocksTable.tableName,
         JWT__SECRET: jwtSecretParam.valueAsString,
         JWT__ISSUER: 'LinkGuardiao',
         JWT__AUDIENCE: 'LinkGuardiao',
@@ -165,6 +173,7 @@ export class LinkGuardiaoStack extends cdk.Stack {
     accessTable.grantReadWriteData(apiFunction);
     dailyLimitsTable.grantReadWriteData(apiFunction);
     refreshTokensTable.grantReadWriteData(apiFunction);
+    emailLocksTable.grantReadWriteData(apiFunction);
     analyticsQueue.grantSendMessages(apiFunction);
 
     apiFunction.addToRolePolicy(new iam.PolicyStatement({

@@ -9,6 +9,10 @@ import * as apigwv2_integrations from 'aws-cdk-lib/aws-apigatewayv2-integrations
 import * as wafv2 from 'aws-cdk-lib/aws-wafv2';
 import * as logs from 'aws-cdk-lib/aws-logs';
 import * as iam from 'aws-cdk-lib/aws-iam';
+import * as cloudwatch from 'aws-cdk-lib/aws-cloudwatch';
+import * as cloudwatch_actions from 'aws-cdk-lib/aws-cloudwatch-actions';
+import * as sns from 'aws-cdk-lib/aws-sns';
+import * as sns_subscriptions from 'aws-cdk-lib/aws-sns-subscriptions';
 import * as path from 'path';
 import * as fs from 'fs';
 
@@ -312,6 +316,103 @@ export class LinkGuardiaoStack extends cdk.Stack {
       resourceArn: stageArn,
       webAclArn: webAcl.attrArn,
     });
+
+    // ─── Observability: ADOT Lambda Layer ────────────────────────────────────
+
+    // AWS-managed ADOT layer for .NET on amd64 — zero-code instrumentation
+    const adotLayerArn = `arn:aws:lambda:${this.region}:901920570463:layer:aws-otel-dotnet-amd64-ver-1-3-1:1`;
+    const adotLayer = lambda.LayerVersion.fromLayerVersionArn(this, 'AdotLayer', adotLayerArn);
+    apiFunction.addLayers(adotLayer);
+
+    apiFunction.addEnvironment('OTEL_SERVICE_NAME', `linkguardiao-api-${envName}`);
+    apiFunction.addEnvironment('OTEL_EXPORTER_OTLP_ENDPOINT', 'http://localhost:4317');
+    apiFunction.addEnvironment('OTEL_PROPAGATORS', 'tracecontext,baggage,xray');
+    apiFunction.addEnvironment('AWS_LAMBDA_EXEC_WRAPPER', '/opt/otel-instrument');
+
+    // ─── Observability: SNS Alarm Topic ──────────────────────────────────────
+
+    const alarmTopic = new sns.Topic(this, 'AlarmTopic', {
+      topicName: `linkguardiao-alarms-${envName}`,
+      displayName: 'LinkGuardiao Alarms',
+    });
+
+    const alarmEmail = this.node.tryGetContext('alarmEmail') as string | undefined;
+    if (alarmEmail) {
+      alarmTopic.addSubscription(new sns_subscriptions.EmailSubscription(alarmEmail));
+    }
+
+    // ─── Observability: CloudWatch Alarms ────────────────────────────────────
+
+    const apiErrorAlarm = new cloudwatch.Alarm(this, 'ApiErrorRateAlarm', {
+      alarmName: `linkguardiao-api-error-rate-${envName}`,
+      alarmDescription: 'API Lambda error rate > 5% over 5 minutes',
+      metric: new cloudwatch.MathExpression({
+        expression: 'errors / invocations * 100',
+        usingMetrics: {
+          errors: apiFunction.metricErrors({ period: cdk.Duration.minutes(5) }),
+          invocations: apiFunction.metricInvocations({ period: cdk.Duration.minutes(5) }),
+        },
+        period: cdk.Duration.minutes(5),
+        label: 'Error rate (%)',
+      }),
+      threshold: 5,
+      evaluationPeriods: 1,
+      treatMissingData: cloudwatch.TreatMissingData.NOT_BREACHING,
+      comparisonOperator: cloudwatch.ComparisonOperator.GREATER_THAN_THRESHOLD,
+    });
+    apiErrorAlarm.addAlarmAction(new cloudwatch_actions.SnsAction(alarmTopic));
+
+    const dlqAlarm = new cloudwatch.Alarm(this, 'AnalyticsDlqAlarm', {
+      alarmName: `linkguardiao-analytics-dlq-${envName}`,
+      alarmDescription: 'Analytics DLQ has messages — consumer is failing',
+      metric: analyticsDlq.metricApproximateNumberOfMessagesVisible({
+        period: cdk.Duration.minutes(5),
+      }),
+      threshold: 0,
+      evaluationPeriods: 1,
+      treatMissingData: cloudwatch.TreatMissingData.NOT_BREACHING,
+      comparisonOperator: cloudwatch.ComparisonOperator.GREATER_THAN_THRESHOLD,
+    });
+    dlqAlarm.addAlarmAction(new cloudwatch_actions.SnsAction(alarmTopic));
+
+    // ─── Observability: CloudWatch Dashboard ─────────────────────────────────
+
+    const dashboard = new cloudwatch.Dashboard(this, 'Dashboard', {
+      dashboardName: `linkguardiao-${envName}`,
+    });
+
+    dashboard.addWidgets(
+      new cloudwatch.GraphWidget({
+        title: 'API Lambda — Invocations & Errors',
+        left: [apiFunction.metricInvocations({ period: cdk.Duration.minutes(1) })],
+        right: [apiFunction.metricErrors({ period: cdk.Duration.minutes(1) })],
+        width: 12,
+      }),
+      new cloudwatch.GraphWidget({
+        title: 'API Lambda — Duration (P50 / P99)',
+        left: [
+          apiFunction.metricDuration({ statistic: 'p50', period: cdk.Duration.minutes(1), label: 'P50' }),
+          apiFunction.metricDuration({ statistic: 'p99', period: cdk.Duration.minutes(1), label: 'P99' }),
+        ],
+        width: 12,
+      }),
+    );
+
+    dashboard.addWidgets(
+      new cloudwatch.GraphWidget({
+        title: 'SQS Analytics Queue — Depth',
+        left: [
+          analyticsQueue.metricApproximateNumberOfMessagesVisible({ period: cdk.Duration.minutes(1), label: 'Queue depth' }),
+          analyticsDlq.metricApproximateNumberOfMessagesVisible({ period: cdk.Duration.minutes(1), label: 'DLQ depth' }),
+        ],
+        width: 12,
+      }),
+      new cloudwatch.AlarmStatusWidget({
+        title: 'Alarm Status',
+        alarms: [apiErrorAlarm, dlqAlarm],
+        width: 12,
+      }),
+    );
 
     // ─── Outputs ─────────────────────────────────────────────────────────────
 

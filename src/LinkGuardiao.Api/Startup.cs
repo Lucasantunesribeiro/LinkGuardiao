@@ -167,7 +167,7 @@ namespace LinkGuardiao.Api
                     {
                         policy.WithOrigins(allowedOrigins)
                             .WithMethods("GET", "POST", "PUT", "DELETE", "OPTIONS")
-                            .WithHeaders("Authorization", "Content-Type", "Accept", "X-Request-Id")
+                            .WithHeaders("Authorization", "Content-Type", "Accept", "X-Request-Id", "X-Link-Password")
                             .SetPreflightMaxAge(TimeSpan.FromHours(1));
                     }
                     else

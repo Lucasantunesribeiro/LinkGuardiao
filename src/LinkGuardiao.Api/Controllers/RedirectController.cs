@@ -31,6 +31,16 @@ namespace LinkGuardiao.Api.Controllers
                 return NotFound(new { message = "Link não encontrado ou expirado" });
             }
 
+            if (link.IsPasswordProtected)
+            {
+                var pwd = Request.Headers["X-Link-Password"].FirstOrDefault();
+                if (string.IsNullOrEmpty(pwd))
+                    return StatusCode(StatusCodes.Status401Unauthorized, new { requiresPassword = true, shortCode });
+                var valid = await _linkService.VerifyLinkPasswordAsync(shortCode, pwd);
+                if (!valid)
+                    return StatusCode(StatusCodes.Status401Unauthorized, new { requiresPassword = true, invalidPassword = true });
+            }
+
             try
             {
                 var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown";

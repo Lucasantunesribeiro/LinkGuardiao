@@ -77,7 +77,11 @@ Unit tests in `LinkGuardiao.Application.Tests` instantiate services directly wit
 
 ### Frontend
 
-React + Vite + TypeScript + Tailwind. API calls go through `Frontend/src/lib/api/client.ts`. Auth state lives in `Frontend/src/features/auth/AuthContext.tsx`. `VITE_API_BASE_URL` must point to the Lambda Function URL.
+React + Vite + TypeScript + Tailwind. API calls go through `Frontend/src/lib/api/client.ts` (axios, with a request interceptor that injects the JWT from `localStorage` and a response interceptor that redirects to `/login` on 401). Auth state lives in `Frontend/src/features/auth/AuthContext.tsx`. `VITE_API_BASE_URL` must point to the Lambda Function URL.
+
+Frontend is deployed to **Cloudflare Pages** (`linkguardiao` project) automatically by CI on every push to `main`. Required GitHub secrets: `CLOUDFLARE_API_TOKEN`, `CLOUDFLARE_ACCOUNT_ID`, `VITE_API_BASE_URL`.
+
+Short-code redirect routes are handled client-side: `/:shortCode` and `/r/:shortCode` both render `RedirectPage`, which calls the backend to resolve and redirect.
 
 ### Rate Limiting
 

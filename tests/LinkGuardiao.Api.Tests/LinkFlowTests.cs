@@ -1,6 +1,7 @@
 using System.Net;
 using System.Net.Http.Headers;
 using System.Net.Http.Json;
+using System.Text.Json;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Xunit;
 
@@ -54,6 +55,111 @@ namespace LinkGuardiao.Api.Tests
             var stats = await statsResponse.Content.ReadFromJsonAsync<LinkStatsResponse>();
             Assert.NotNull(stats);
             Assert.True(stats!.TotalClicks >= 1);
+        }
+
+        [Fact]
+        public async Task PublicLink_NoPasswordNeeded_Returns302()
+        {
+            var auth = await RegisterAndLoginAsync("public-link@example.com");
+            _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", auth.Token);
+
+            var createResponse = await _client.PostAsJsonAsync("/api/links", new
+            {
+                originalUrl = "https://example.com",
+                title = "Public"
+            });
+            Assert.Equal(HttpStatusCode.Created, createResponse.StatusCode);
+            var link = await createResponse.Content.ReadFromJsonAsync<LinkResponse>();
+
+            _client.DefaultRequestHeaders.Authorization = null;
+            var redirectResponse = await _client.GetAsync($"/{link!.ShortCode}");
+            Assert.Equal(HttpStatusCode.Redirect, redirectResponse.StatusCode);
+        }
+
+        [Fact]
+        public async Task PasswordProtectedLink_NoHeader_Returns401WithRequiresPasswordFlag()
+        {
+            var auth = await RegisterAndLoginAsync("pw-noheader@example.com");
+            _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", auth.Token);
+
+            var createResponse = await _client.PostAsJsonAsync("/api/links", new
+            {
+                originalUrl = "https://example.com",
+                title = "Protected",
+                password = "secret1234"
+            });
+            Assert.Equal(HttpStatusCode.Created, createResponse.StatusCode);
+            var link = await createResponse.Content.ReadFromJsonAsync<LinkResponse>();
+
+            _client.DefaultRequestHeaders.Authorization = null;
+            var redirectResponse = await _client.GetAsync($"/{link!.ShortCode}");
+            Assert.Equal(HttpStatusCode.Unauthorized, redirectResponse.StatusCode);
+
+            var body = await redirectResponse.Content.ReadFromJsonAsync<JsonElement>();
+            Assert.True(body.GetProperty("requiresPassword").GetBoolean());
+        }
+
+        [Fact]
+        public async Task PasswordProtectedLink_WrongPassword_Returns401WithInvalidFlag()
+        {
+            var auth = await RegisterAndLoginAsync("pw-wrong@example.com");
+            _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", auth.Token);
+
+            var createResponse = await _client.PostAsJsonAsync("/api/links", new
+            {
+                originalUrl = "https://example.com",
+                title = "Protected",
+                password = "correct1234"
+            });
+            Assert.Equal(HttpStatusCode.Created, createResponse.StatusCode);
+            var link = await createResponse.Content.ReadFromJsonAsync<LinkResponse>();
+
+            _client.DefaultRequestHeaders.Authorization = null;
+            var request = new HttpRequestMessage(HttpMethod.Get, $"/{link!.ShortCode}");
+            request.Headers.Add("X-Link-Password", "wrong-password");
+            var redirectResponse = await _client.SendAsync(request);
+            Assert.Equal(HttpStatusCode.Unauthorized, redirectResponse.StatusCode);
+
+            var body = await redirectResponse.Content.ReadFromJsonAsync<JsonElement>();
+            Assert.True(body.GetProperty("requiresPassword").GetBoolean());
+            Assert.True(body.GetProperty("invalidPassword").GetBoolean());
+        }
+
+        [Fact]
+        public async Task PasswordProtectedLink_CorrectPassword_Returns302()
+        {
+            var auth = await RegisterAndLoginAsync("pw-correct@example.com");
+            _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", auth.Token);
+
+            var createResponse = await _client.PostAsJsonAsync("/api/links", new
+            {
+                originalUrl = "https://example.com",
+                title = "Protected",
+                password = "rightpass1234"
+            });
+            Assert.Equal(HttpStatusCode.Created, createResponse.StatusCode);
+            var link = await createResponse.Content.ReadFromJsonAsync<LinkResponse>();
+
+            _client.DefaultRequestHeaders.Authorization = null;
+            var request = new HttpRequestMessage(HttpMethod.Get, $"/{link!.ShortCode}");
+            request.Headers.Add("X-Link-Password", "rightpass1234");
+            var redirectResponse = await _client.SendAsync(request);
+            Assert.Equal(HttpStatusCode.Redirect, redirectResponse.StatusCode);
+        }
+
+        private async Task<AuthResponse> RegisterAndLoginAsync(string email)
+        {
+            var response = await _client.PostAsJsonAsync("/api/auth/register", new
+            {
+                name = "Test User",
+                email,
+                password = "Secret123!"
+            });
+            var content = await response.Content.ReadAsStringAsync();
+            Assert.True(response.IsSuccessStatusCode, content);
+            var auth = await response.Content.ReadFromJsonAsync<AuthResponse>();
+            Assert.NotNull(auth);
+            return auth!;
         }
 
         private sealed record AuthResponse(string Token);

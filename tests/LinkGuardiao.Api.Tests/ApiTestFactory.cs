@@ -48,11 +48,13 @@ namespace LinkGuardiao.Api.Tests
                 services.RemoveAll(typeof(IUserRepository));
                 services.RemoveAll(typeof(IAccessLogRepository));
                 services.RemoveAll(typeof(IDailyLimitStore));
+                services.RemoveAll(typeof(IRefreshTokenRepository));
 
                 services.AddSingleton<ILinkRepository, InMemoryLinkRepository>();
                 services.AddSingleton<IUserRepository, InMemoryUserRepository>();
                 services.AddSingleton<IAccessLogRepository, InMemoryAccessLogRepository>();
                 services.AddSingleton<IDailyLimitStore, AllowAllDailyLimitStore>();
+                services.AddSingleton<IRefreshTokenRepository, InMemoryRefreshTokenRepository>();
             });
         }
     }

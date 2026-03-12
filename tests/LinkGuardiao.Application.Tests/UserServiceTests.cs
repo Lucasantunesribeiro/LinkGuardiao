@@ -1,24 +1,33 @@
 using LinkGuardiao.Application.DTOs;
 using LinkGuardiao.Application.Entities;
 using LinkGuardiao.Application.Interfaces;
+using LinkGuardiao.Application.Options;
 using LinkGuardiao.Application.Services;
 using LinkGuardiao.Infrastructure.Security;
 using Microsoft.Extensions.Logging.Abstractions;
+using Microsoft.Extensions.Options;
 using Xunit;
 
 namespace LinkGuardiao.Application.Tests
 {
     public class UserServiceTests
     {
+        private static UserService BuildService(IUserRepository users)
+        {
+            return new UserService(
+                users,
+                new InMemoryRefreshTokenRepository(),
+                new Pbkdf2PasswordHasher(),
+                new FakeJwtTokenService(),
+                Microsoft.Extensions.Options.Options.Create(new JwtOptions { RefreshTokenDays = 30 }),
+                NullLogger<UserService>.Instance);
+        }
+
         [Fact]
         public async Task RegisterAsync_CreatesUserAndReturnsToken()
         {
             var users = new InMemoryUserRepository();
-            var service = new UserService(
-                users,
-                new Pbkdf2PasswordHasher(),
-                new FakeJwtTokenService(),
-                NullLogger<UserService>.Instance);
+            var service = BuildService(users);
 
             var result = await service.RegisterAsync(new UserRegisterDto
             {
@@ -37,11 +46,7 @@ namespace LinkGuardiao.Application.Tests
         public async Task LoginAsync_ReturnsFailureForInvalidPassword()
         {
             var users = new InMemoryUserRepository();
-            var service = new UserService(
-                users,
-                new Pbkdf2PasswordHasher(),
-                new FakeJwtTokenService(),
-                NullLogger<UserService>.Instance);
+            var service = BuildService(users);
 
             await service.RegisterAsync(new UserRegisterDto
             {
@@ -63,6 +68,33 @@ namespace LinkGuardiao.Application.Tests
         private sealed class FakeJwtTokenService : IJwtTokenService
         {
             public string GenerateToken(User user) => "fake-token";
+            public string GenerateRefreshToken() => Convert.ToBase64String(Guid.NewGuid().ToByteArray());
+            public string HashToken(string token) => token.GetHashCode().ToString("x8");
+        }
+
+        private sealed class InMemoryRefreshTokenRepository : IRefreshTokenRepository
+        {
+            private readonly Dictionary<string, RefreshToken> _tokens = new();
+
+            public Task<RefreshToken?> GetByTokenHashAsync(string tokenHash, CancellationToken ct = default)
+            {
+                _tokens.TryGetValue(tokenHash, out var t);
+                return Task.FromResult(t);
+            }
+
+            public Task CreateAsync(RefreshToken token, CancellationToken ct = default)
+            {
+                _tokens[token.TokenHash] = token;
+                return Task.CompletedTask;
+            }
+
+            public Task RevokeAsync(string tokenHash, CancellationToken ct = default)
+            {
+                if (_tokens.TryGetValue(tokenHash, out var t)) t.IsRevoked = true;
+                return Task.CompletedTask;
+            }
+
+            public Task RevokeAllForUserAsync(string userId, CancellationToken ct = default) => Task.CompletedTask;
         }
 
         private sealed class InMemoryUserRepository : IUserRepository

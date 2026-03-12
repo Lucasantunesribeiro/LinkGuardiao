@@ -136,4 +136,45 @@ namespace LinkGuardiao.Api.Tests
             return Task.FromResult(true);
         }
     }
+
+    public sealed class InMemoryRefreshTokenRepository : IRefreshTokenRepository
+    {
+        private readonly Dictionary<string, RefreshToken> _tokens = new();
+        private readonly Dictionary<string, List<string>> _byUser = new();
+
+        public Task<RefreshToken?> GetByTokenHashAsync(string tokenHash, CancellationToken ct = default)
+        {
+            _tokens.TryGetValue(tokenHash, out var token);
+            return Task.FromResult(token);
+        }
+
+        public Task CreateAsync(RefreshToken token, CancellationToken ct = default)
+        {
+            _tokens[token.TokenHash] = token;
+            if (!_byUser.ContainsKey(token.UserId))
+                _byUser[token.UserId] = new List<string>();
+            _byUser[token.UserId].Add(token.TokenHash);
+            return Task.CompletedTask;
+        }
+
+        public Task RevokeAsync(string tokenHash, CancellationToken ct = default)
+        {
+            if (_tokens.TryGetValue(tokenHash, out var token))
+                token.IsRevoked = true;
+            return Task.CompletedTask;
+        }
+
+        public Task RevokeAllForUserAsync(string userId, CancellationToken ct = default)
+        {
+            if (_byUser.TryGetValue(userId, out var hashes))
+            {
+                foreach (var hash in hashes)
+                {
+                    if (_tokens.TryGetValue(hash, out var token))
+                        token.IsRevoked = true;
+                }
+            }
+            return Task.CompletedTask;
+        }
+    }
 }

@@ -179,6 +179,9 @@ namespace LinkGuardiao.Api
                 });
             });
 
+            // In development (including tests), use permissive limits to avoid interference
+            var isDev = _environment.IsDevelopment();
+
             services.AddRateLimiter(options =>
             {
                 options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
@@ -187,7 +190,7 @@ namespace LinkGuardiao.Api
                         GetClientId(context),
                         _ => new FixedWindowRateLimiterOptions
                         {
-                            PermitLimit = 200,
+                            PermitLimit = isDev ? 100_000 : 200,
                             Window = TimeSpan.FromMinutes(1),
                             QueueProcessingOrder = QueueProcessingOrder.OldestFirst,
                             QueueLimit = 0
@@ -198,7 +201,7 @@ namespace LinkGuardiao.Api
                         GetClientId(context),
                         _ => new FixedWindowRateLimiterOptions
                         {
-                            PermitLimit = 10,
+                            PermitLimit = isDev ? 100_000 : 10,
                             Window = TimeSpan.FromMinutes(1),
                             QueueProcessingOrder = QueueProcessingOrder.OldestFirst,
                             QueueLimit = 0
@@ -209,7 +212,7 @@ namespace LinkGuardiao.Api
                         GetClientId(context),
                         _ => new FixedWindowRateLimiterOptions
                         {
-                            PermitLimit = 10,
+                            PermitLimit = isDev ? 100_000 : 10,
                             Window = TimeSpan.FromMinutes(1),
                             QueueProcessingOrder = QueueProcessingOrder.OldestFirst,
                             QueueLimit = 0
@@ -219,7 +222,7 @@ namespace LinkGuardiao.Api
                         GetClientId(context),
                         _ => new FixedWindowRateLimiterOptions
                         {
-                            PermitLimit = 60,
+                            PermitLimit = isDev ? 100_000 : 60,
                             Window = TimeSpan.FromMinutes(1),
                             QueueProcessingOrder = QueueProcessingOrder.OldestFirst,
                             QueueLimit = 0
@@ -230,7 +233,7 @@ namespace LinkGuardiao.Api
                         GetClientId(context),
                         _ => new FixedWindowRateLimiterOptions
                         {
-                            PermitLimit = 120,
+                            PermitLimit = isDev ? 100_000 : 120,
                             Window = TimeSpan.FromMinutes(1),
                             QueueProcessingOrder = QueueProcessingOrder.OldestFirst,
                             QueueLimit = 0
@@ -261,6 +264,7 @@ namespace LinkGuardiao.Api
                 UsersTableName = _configuration["DDB_TABLE_USERS"] ?? _configuration["DynamoDb:UsersTableName"] ?? string.Empty,
                 AccessTableName = _configuration["DDB_TABLE_ACCESS"] ?? _configuration["DynamoDb:AccessTableName"] ?? string.Empty,
                 DailyLimitsTableName = _configuration["DDB_TABLE_DAILY_LIMITS"] ?? _configuration["DynamoDb:DailyLimitsTableName"] ?? string.Empty,
+                RefreshTokensTableName = _configuration["DDB_TABLE_REFRESH_TOKENS"] ?? _configuration["DynamoDb:RefreshTokensTableName"] ?? string.Empty,
                 AccessRetentionDays = _configuration.GetValue<int?>("DynamoDb:AccessRetentionDays") ?? 30
             };
 
@@ -270,6 +274,7 @@ namespace LinkGuardiao.Api
                 options.UsersTableName = dynamoOptions.UsersTableName;
                 options.AccessTableName = dynamoOptions.AccessTableName;
                 options.DailyLimitsTableName = dynamoOptions.DailyLimitsTableName;
+                options.RefreshTokensTableName = dynamoOptions.RefreshTokensTableName;
                 options.AccessRetentionDays = dynamoOptions.AccessRetentionDays;
             });
 
@@ -289,6 +294,7 @@ namespace LinkGuardiao.Api
             services.AddSingleton<IUserRepository, DynamoDbUserRepository>();
             services.AddSingleton<IAccessLogRepository, DynamoDbAccessLogRepository>();
             services.AddSingleton<IDailyLimitStore, DynamoDbDailyLimitStore>();
+            services.AddSingleton<IRefreshTokenRepository, DynamoDbRefreshTokenRepository>();
 
             services.AddScoped<ILinkService, LinkService>();
             services.AddScoped<IUserService, UserService>();

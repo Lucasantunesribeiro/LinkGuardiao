@@ -1,7 +1,7 @@
 import { createContext, useContext, useEffect, useState } from 'react';
 import { api } from '../../lib/api/client';
 import { AuthResult, UserDto } from '../../lib/api/types';
-import { TOKEN_STORAGE_KEY } from './constants';
+import { TOKEN_STORAGE_KEY, REFRESH_TOKEN_STORAGE_KEY } from './constants';
 
 interface AuthContextType {
   user: UserDto | null;
@@ -45,17 +45,28 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
   const signIn = async (email: string, password: string) => {
     const response = await api.post<AuthResult>('/auth/login', { email, password });
     localStorage.setItem(TOKEN_STORAGE_KEY, response.data.token);
+    if (response.data.refreshToken) {
+      localStorage.setItem(REFRESH_TOKEN_STORAGE_KEY, response.data.refreshToken);
+    }
     setUser(response.data.user);
   };
 
   const signUp = async (name: string, email: string, password: string) => {
     const response = await api.post<AuthResult>('/auth/register', { name, email, password });
     localStorage.setItem(TOKEN_STORAGE_KEY, response.data.token);
+    if (response.data.refreshToken) {
+      localStorage.setItem(REFRESH_TOKEN_STORAGE_KEY, response.data.refreshToken);
+    }
     setUser(response.data.user);
   };
 
   const signOut = () => {
+    const refreshToken = localStorage.getItem(REFRESH_TOKEN_STORAGE_KEY);
+    if (refreshToken) {
+      api.post('/auth/logout', { refreshToken }).catch(() => {});
+    }
     localStorage.removeItem(TOKEN_STORAGE_KEY);
+    localStorage.removeItem(REFRESH_TOKEN_STORAGE_KEY);
     setUser(null);
   };
 

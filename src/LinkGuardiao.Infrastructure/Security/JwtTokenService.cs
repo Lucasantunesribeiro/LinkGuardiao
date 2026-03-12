@@ -1,5 +1,6 @@
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
+using System.Security.Cryptography;
 using System.Text;
 using LinkGuardiao.Application.Entities;
 using LinkGuardiao.Application.Interfaces;
@@ -38,6 +39,19 @@ namespace LinkGuardiao.Infrastructure.Security
                 signingCredentials: credentials);
 
             return new JwtSecurityTokenHandler().WriteToken(token);
+        }
+
+        public string GenerateRefreshToken()
+        {
+            var bytes = RandomNumberGenerator.GetBytes(48);
+            return Convert.ToBase64String(bytes).TrimEnd('=').Replace('+', '-').Replace('/', '_');
+        }
+
+        public string HashToken(string token)
+        {
+            var bytes = Encoding.UTF8.GetBytes(token);
+            var hash = SHA256.HashData(bytes);
+            return Convert.ToHexString(hash).ToLowerInvariant();
         }
     }
 }

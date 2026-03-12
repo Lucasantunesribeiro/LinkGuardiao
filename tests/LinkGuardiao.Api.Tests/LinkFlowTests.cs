@@ -147,6 +147,56 @@ namespace LinkGuardiao.Api.Tests
             Assert.Equal(HttpStatusCode.Redirect, redirectResponse.StatusCode);
         }
 
+        [Fact]
+        public async Task RefreshToken_ValidToken_ReturnsNewPair()
+        {
+            var auth = await RegisterAndLoginAsync("refresh-valid@example.com");
+            Assert.NotNull(auth.RefreshToken);
+
+            var response = await _client.PostAsJsonAsync("/api/auth/refresh", new { refreshToken = auth.RefreshToken });
+            Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+
+            var newAuth = await response.Content.ReadFromJsonAsync<AuthResponse>();
+            Assert.NotNull(newAuth);
+            Assert.NotNull(newAuth!.Token);
+            Assert.NotNull(newAuth.RefreshToken);
+            // Refresh token must rotate (new random token each time)
+            Assert.NotEqual(auth.RefreshToken, newAuth.RefreshToken);
+        }
+
+        [Fact]
+        public async Task RefreshToken_ExpiredToken_Returns401()
+        {
+            var response = await _client.PostAsJsonAsync("/api/auth/refresh", new { refreshToken = "not-a-valid-token" });
+            Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
+        }
+
+        [Fact]
+        public async Task RefreshToken_RevokedToken_Returns401()
+        {
+            var auth = await RegisterAndLoginAsync("refresh-revoked@example.com");
+
+            // Use the refresh token once to rotate it
+            var firstRefresh = await _client.PostAsJsonAsync("/api/auth/refresh", new { refreshToken = auth.RefreshToken });
+            Assert.Equal(HttpStatusCode.OK, firstRefresh.StatusCode);
+
+            // Try using the OLD refresh token again — should be revoked now
+            var secondRefresh = await _client.PostAsJsonAsync("/api/auth/refresh", new { refreshToken = auth.RefreshToken });
+            Assert.Equal(HttpStatusCode.Unauthorized, secondRefresh.StatusCode);
+        }
+
+        [Fact]
+        public async Task Logout_RevokesToken_SubsequentRefreshFails()
+        {
+            var auth = await RegisterAndLoginAsync("logout-test@example.com");
+
+            var logoutResponse = await _client.PostAsJsonAsync("/api/auth/logout", new { refreshToken = auth.RefreshToken });
+            Assert.Equal(HttpStatusCode.NoContent, logoutResponse.StatusCode);
+
+            var refreshResponse = await _client.PostAsJsonAsync("/api/auth/refresh", new { refreshToken = auth.RefreshToken });
+            Assert.Equal(HttpStatusCode.Unauthorized, refreshResponse.StatusCode);
+        }
+
         private async Task<AuthResponse> RegisterAndLoginAsync(string email)
         {
             var response = await _client.PostAsJsonAsync("/api/auth/register", new
@@ -162,7 +212,7 @@ namespace LinkGuardiao.Api.Tests
             return auth!;
         }
 
-        private sealed record AuthResponse(string Token);
+        private sealed record AuthResponse(string Token, string? RefreshToken);
         private sealed record LinkResponse(string Id, string ShortCode);
         private sealed record LinkStatsResponse(int TotalClicks);
     }

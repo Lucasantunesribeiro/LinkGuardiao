@@ -41,5 +41,31 @@ namespace LinkGuardiao.Api.Controllers
 
             return Ok(result);
         }
+
+        [HttpPost("refresh")]
+        [EnableRateLimiting("auth")]
+        public async Task<IActionResult> Refresh([FromBody] RefreshTokenRequest request)
+        {
+            if (string.IsNullOrWhiteSpace(request.RefreshToken))
+                return BadRequest(new { message = "Refresh token é obrigatório." });
+
+            var result = await _userService.RefreshAsync(request.RefreshToken);
+            if (!result.Success)
+                return Unauthorized(new { message = result.Message });
+
+            return Ok(result);
+        }
+
+        [HttpPost("logout")]
+        [EnableRateLimiting("auth")]
+        public async Task<IActionResult> Logout([FromBody] RefreshTokenRequest request)
+        {
+            if (!string.IsNullOrWhiteSpace(request.RefreshToken))
+                await _userService.LogoutAsync(request.RefreshToken);
+
+            return NoContent();
+        }
     }
+
+    public sealed record RefreshTokenRequest(string RefreshToken);
 }

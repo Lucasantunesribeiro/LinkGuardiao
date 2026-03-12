@@ -25,6 +25,7 @@
   <ItemGroup>
     <ProjectReference Include="..\LinkGuardiao.Application\LinkGuardiao.Application.csproj" />
     <ProjectReference Include="..\LinkGuardiao.Infrastructure\LinkGuardiao.Infrastructure.csproj" />
+    <ProjectReference Include="..\LinkGuardiao.Infrastructure.PostgreSQL\LinkGuardiao.Infrastructure.PostgreSQL.csproj" />
   </ItemGroup>
 
 </Project>

@@ -14,6 +14,7 @@ using LinkGuardiao.Infrastructure.Data;
 using LinkGuardiao.Infrastructure.Messaging;
 using LinkGuardiao.Infrastructure.Options;
 using Amazon.SQS;
+using LinkGuardiao.Infrastructure.PostgreSQL;
 using LinkGuardiao.Infrastructure.Security;
 using Amazon.DynamoDBv2;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -291,9 +292,25 @@ namespace LinkGuardiao.Api
                 }
             }
 
-            services.AddAWSService<IAmazonDynamoDB>();
-            services.AddAWSService<IAmazonSQS>();
+            var storageProvider = _configuration["STORAGE_PROVIDER"] ?? "dynamodb";
+            if (storageProvider.Equals("postgresql", StringComparison.OrdinalIgnoreCase))
+            {
+                var connectionString = _configuration.GetConnectionString("PostgreSQL")
+                    ?? _configuration["POSTGRESQL_CONNECTION_STRING"]
+                    ?? throw new InvalidOperationException("PostgreSQL connection string is required when STORAGE_PROVIDER=postgresql.");
+                services.AddPostgreSQLInfrastructure(connectionString);
+            }
+            else
+            {
+                services.AddAWSService<IAmazonDynamoDB>();
+                services.AddSingleton<ILinkRepository, DynamoDbLinkRepository>();
+                services.AddSingleton<IUserRepository, DynamoDbUserRepository>();
+                services.AddSingleton<IAccessLogRepository, DynamoDbAccessLogRepository>();
+                services.AddSingleton<IDailyLimitStore, DynamoDbDailyLimitStore>();
+                services.AddSingleton<IRefreshTokenRepository, DynamoDbRefreshTokenRepository>();
+            }
 
+            services.AddAWSService<IAmazonSQS>();
             var sqsQueueUrl = _configuration["SQS_ANALYTICS_QUEUE_URL"];
             services.Configure<SqsOptions>(options => options.AnalyticsQueueUrl = sqsQueueUrl ?? string.Empty);
             if (!string.IsNullOrWhiteSpace(sqsQueueUrl))
@@ -304,11 +321,6 @@ namespace LinkGuardiao.Api
             {
                 services.AddSingleton<IAnalyticsQueue, NoOpAnalyticsQueue>();
             }
-            services.AddSingleton<ILinkRepository, DynamoDbLinkRepository>();
-            services.AddSingleton<IUserRepository, DynamoDbUserRepository>();
-            services.AddSingleton<IAccessLogRepository, DynamoDbAccessLogRepository>();
-            services.AddSingleton<IDailyLimitStore, DynamoDbDailyLimitStore>();
-            services.AddSingleton<IRefreshTokenRepository, DynamoDbRefreshTokenRepository>();
 
             services.AddScoped<ILinkService, LinkService>();
             services.AddScoped<IUserService, UserService>();

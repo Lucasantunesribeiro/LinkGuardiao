@@ -68,8 +68,8 @@ npm run dev
 
 ```bash
 dotnet test LinkGuardiao.sln
-cd Frontend && npm run build
-cd infra/cdk && npm ci && npx cdk synth -c env=dev
+cd Frontend && npm run lint && npm run test:run && npm run build
+cd infra/cdk && npm ci && npm run build && npx cdk synth -c env=dev
 ```
 
 ## Port summary

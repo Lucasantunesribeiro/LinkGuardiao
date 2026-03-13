@@ -6,13 +6,13 @@
 - Output directory: `dist`
 
 ## Environment variables
-- `VITE_API_BASE_URL=https://<lambda-function-url>`
+- `VITE_API_BASE_URL=https://<api-id>.execute-api.<region>.amazonaws.com`
 
 ## Steps
 1. Acesse Cloudflare Pages e crie um novo projeto.
 2. Conecte o repositorio e selecione o branch desejado.
 3. Configure o root, build command e output conforme acima.
-4. Adicione a variavel `VITE_API_BASE_URL`.
+4. Adicione a variavel `VITE_API_BASE_URL` usando o output `ApiEndpoint` do stack CDK, sem adicionar `/api`.
 5. Execute o primeiro deploy.
 
 ## Custom domain (opcional)

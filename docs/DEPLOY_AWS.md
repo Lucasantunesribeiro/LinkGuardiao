@@ -4,16 +4,17 @@
 - AWS CLI configurado
 - Node 20+
 - .NET 8 SDK
-- Permissoes para criar Lambda e DynamoDB
+- Permissoes para criar Lambda, API Gateway, DynamoDB, SQS e WAF
 
 ## Validacao obrigatoria de credenciais
 ```bash
 aws sts get-caller-identity
 aws configure list
 ```
+
 Confirme:
 - `AWS_PROFILE=default`
-- `AWS_REGION=us-east-1`
+- `AWS_REGION=<regiao desejada>`
 
 ## Deploy manual (PowerShell)
 ```powershell
@@ -26,7 +27,7 @@ cd ..\..
 scripts\aws\build-lambda.ps1
 
 # deploy
-scripts\aws\deploy.ps1 -Env dev -JwtSecret "SUA_CHAVE_FORTE" -CorsAllowedOrigin "https://9b5eff2a.linkguardiao.pages.dev"
+scripts\aws\deploy.ps1 -Env dev -JwtSecret "SUA_CHAVE_FORTE" -CorsAllowedOrigin "https://linkguardiao.pages.dev"
 ```
 
 ## Rollback / teardown
@@ -34,23 +35,31 @@ scripts\aws\deploy.ps1 -Env dev -JwtSecret "SUA_CHAVE_FORTE" -CorsAllowedOrigin 
 scripts\aws\destroy.ps1 -Env dev
 ```
 
+## Endpoint da API
+O stack CDK exporta o output `ApiEndpoint`, que representa a URL publica do API Gateway HTTP API.
+
+Exemplo:
+```text
+https://<api-id>.execute-api.<region>.amazonaws.com
+```
+
 ## Testes rapidos
 ```bash
 # health
-curl -i https://<FUNCTION_URL>/health
+curl -i https://<API_ENDPOINT>/health
 
 # register
-curl -i https://<FUNCTION_URL>/api/auth/register -H "Content-Type: application/json" -d '{"name":"User","email":"user@example.com","password":"Secret123"}'
+curl -i https://<API_ENDPOINT>/api/auth/register -H "Content-Type: application/json" -d '{"name":"User","email":"user@example.com","password":"Secret123"}'
 
 # create link (use o token JWT)
-curl -i https://<FUNCTION_URL>/api/links -H "Authorization: Bearer <TOKEN>" -H "Content-Type: application/json" -d '{"originalUrl":"https://example.com"}'
+curl -i https://<API_ENDPOINT>/api/links -H "Authorization: Bearer <TOKEN>" -H "Content-Type: application/json" -d '{"originalUrl":"https://example.com"}'
 
 # redirect
-curl -i https://<FUNCTION_URL>/r/<SHORTCODE>
+curl -i https://<API_ENDPOINT>/r/<SHORTCODE>
 ```
 
 ## Cloudflare Pages
-Defina em `VITE_API_BASE_URL` o Function URL (sem `/api`).
+Defina em `VITE_API_BASE_URL` o output `ApiEndpoint` do stack CDK, sem adicionar `/api`.
 
 ## Migracao opcional (SQLite -> DynamoDB)
 ```bash
@@ -68,5 +77,6 @@ Secrets esperados no GitHub:
 - `AWS_REGION`
 - `JWT_SECRET`
 - `CORS_ALLOWED_ORIGIN`
+- `VITE_API_BASE_URL`
 
 Execute o workflow `Deploy AWS (Manual)`.

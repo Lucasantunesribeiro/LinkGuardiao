@@ -19,7 +19,7 @@ namespace LinkGuardiao.Infrastructure.Data
             _options = options.Value;
         }
 
-        public Task RecordAccessAsync(LinkAccess access, CancellationToken cancellationToken = default)
+        public async Task<bool> TryRecordAccessAsync(LinkAccess access, CancellationToken cancellationToken = default)
         {
             var expiresAt = access.AccessTime.AddDays(_options.AccessRetentionDays);
             var request = new PutItemRequest
@@ -36,10 +36,19 @@ namespace LinkGuardiao.Infrastructure.Data
                     ["operatingSystem"] = new AttributeValue { S = access.OperatingSystem ?? string.Empty },
                     ["deviceType"] = new AttributeValue { S = access.DeviceType ?? string.Empty },
                     ["expiresAtEpoch"] = new AttributeValue { N = ToEpochSeconds(expiresAt).ToString(CultureInfo.InvariantCulture) }
-                }
+                },
+                ConditionExpression = "attribute_not_exists(shortCode) AND attribute_not_exists(accessTime)"
             };
 
-            return _dynamoDb.PutItemAsync(request, cancellationToken);
+            try
+            {
+                await _dynamoDb.PutItemAsync(request, cancellationToken);
+                return true;
+            }
+            catch (ConditionalCheckFailedException)
+            {
+                return false;
+            }
         }
 
         public async Task<IReadOnlyList<LinkAccess>> ListAccessesAsync(string shortCode, int limit, CancellationToken cancellationToken = default)

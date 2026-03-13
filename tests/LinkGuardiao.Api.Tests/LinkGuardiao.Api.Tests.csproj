@@ -15,5 +15,6 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\src\LinkGuardiao.Api\LinkGuardiao.Api.csproj" />
+    <ProjectReference Include="..\..\src\LinkGuardiao.AnalyticsConsumer\LinkGuardiao.AnalyticsConsumer.csproj" />
   </ItemGroup>
 </Project>

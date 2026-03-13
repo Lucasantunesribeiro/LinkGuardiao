@@ -235,6 +235,16 @@ namespace LinkGuardiao.Api.Tests
         }
 
         [Fact]
+        public async Task HealthLive_ReturnsHealthyPayload()
+        {
+            var response = await _client.GetAsync("/health/live");
+            response.EnsureSuccessStatusCode();
+
+            var payload = await response.Content.ReadFromJsonAsync<JsonElement>();
+            Assert.Equal("Healthy", payload.GetProperty("status").GetString());
+        }
+
+        [Fact]
         public async Task RefreshToken_ValidToken_ReturnsNewPair()
         {
             var auth = await RegisterAndLoginAsync("refresh-valid@example.com");

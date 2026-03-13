@@ -1,6 +1,7 @@
 using LinkGuardiao.Application.DTOs;
 using LinkGuardiao.Application.Entities;
 using LinkGuardiao.Application.Interfaces;
+using LinkGuardiao.Application.Telemetry;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
@@ -201,6 +202,7 @@ namespace LinkGuardiao.Api.Controllers
             if (!isValid)
                 return Unauthorized();
 
+            LinkGuardiaoMetrics.RecordAccessGrantIssued();
             return Ok(new LinkAccessGrantResponse
             {
                 AccessGrant = _linkAccessGrantService.Generate(shortCode),

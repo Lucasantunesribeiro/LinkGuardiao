@@ -1,6 +1,7 @@
 using LinkGuardiao.Application.Entities;
 using LinkGuardiao.Application.Interfaces;
 using LinkGuardiao.Application.Security;
+using LinkGuardiao.Application.Telemetry;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
@@ -35,7 +36,8 @@ namespace LinkGuardiao.Api.Controllers
             var link = await _linkService.GetLinkByShortCodeAsync(shortCode);
             if (link == null)
             {
-                return NotFound(new { message = "Link não encontrado ou expirado" });
+                LinkGuardiaoMetrics.RecordRedirectBlocked("not_found");
+                return NotFound(new { message = "Link nao encontrado ou expirado" });
             }
 
             if (link.IsPasswordProtected)
@@ -49,10 +51,17 @@ namespace LinkGuardiao.Api.Controllers
 
                 var pwd = Request.Headers["X-Link-Password"].FirstOrDefault();
                 if (string.IsNullOrEmpty(pwd))
+                {
+                    LinkGuardiaoMetrics.RecordRedirectBlocked("password_required");
                     return StatusCode(StatusCodes.Status401Unauthorized, new { requiresPassword = true, shortCode });
+                }
+
                 var valid = await _linkService.VerifyLinkPasswordAsync(shortCode, pwd);
                 if (!valid)
+                {
+                    LinkGuardiaoMetrics.RecordRedirectBlocked("invalid_password");
                     return StatusCode(StatusCodes.Status401Unauthorized, new { requiresPassword = true, invalidPassword = true });
+                }
             }
 
             return await RedirectWithAnalyticsAsync(shortCode, link);
@@ -78,32 +87,38 @@ namespace LinkGuardiao.Api.Controllers
 
                 if (!string.IsNullOrEmpty(userAgent))
                 {
-                    message.Browser = userAgent.Contains("Firefox") ? "Firefox" :
-                        userAgent.Contains("Edg/") ? "Edge" :
-                        userAgent.Contains("Chrome") ? "Chrome" :
-                        userAgent.Contains("Safari") ? "Safari" : "Outro";
+                    message.Browser = userAgent.Contains("Firefox") ? "Firefox"
+                        : userAgent.Contains("Edg/") ? "Edge"
+                        : userAgent.Contains("Chrome") ? "Chrome"
+                        : userAgent.Contains("Safari") ? "Safari"
+                        : "Outro";
 
-                    message.OperatingSystem = userAgent.Contains("Windows") ? "Windows" :
-                        userAgent.Contains("Mac") ? "MacOS" :
-                        userAgent.Contains("Linux") ? "Linux" : "Outro";
+                    message.OperatingSystem = userAgent.Contains("Windows") ? "Windows"
+                        : userAgent.Contains("Mac") ? "MacOS"
+                        : userAgent.Contains("Linux") ? "Linux"
+                        : "Outro";
 
-                    message.DeviceType = userAgent.Contains("Mobile") ? "Mobile" :
-                        userAgent.Contains("Tablet") ? "Tablet" : "Desktop";
+                    message.DeviceType = userAgent.Contains("Mobile") ? "Mobile"
+                        : userAgent.Contains("Tablet") ? "Tablet"
+                        : "Desktop";
                 }
 
                 await _analyticsQueue.EnqueueAsync(message);
             }
             catch (Exception ex)
             {
+                LinkGuardiaoMetrics.RecordAnalyticsEnqueueFailure();
                 _logger.LogWarning(ex, "Failed to enqueue analytics for {ShortCode}", shortCode);
             }
 
             if (!UrlSafety.IsSafeHttpUrl(link.OriginalUrl, out var safeUri))
             {
                 _logger.LogWarning("Blocked unsafe redirect for {ShortCode}", shortCode);
+                LinkGuardiaoMetrics.RecordRedirectBlocked("unsafe_url");
                 return StatusCode(StatusCodes.Status410Gone, new { message = "Link invalido" });
             }
 
+            LinkGuardiaoMetrics.RecordRedirectServed(link.IsPasswordProtected);
             return Redirect(safeUri!.ToString());
         }
 

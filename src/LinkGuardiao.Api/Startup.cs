@@ -1,9 +1,12 @@
 using System.Net;
 using System.Security.Claims;
 using System.Text;
+using System.Text.Json;
 using System.Text.Json.Serialization;
+using System.Linq;
 using FluentValidation;
 using FluentValidation.AspNetCore;
+using LinkGuardiao.Api.Health;
 using LinkGuardiao.Api.Middleware;
 using LinkGuardiao.Application.DTOs;
 using LinkGuardiao.Application.Interfaces;
@@ -11,6 +14,7 @@ using LinkGuardiao.Application.Options;
 using LinkGuardiao.Application.Services;
 using LinkGuardiao.Application.Validation;
 using LinkGuardiao.Infrastructure.Data;
+using LinkGuardiao.Infrastructure.Caching;
 using LinkGuardiao.Infrastructure.Messaging;
 using LinkGuardiao.Infrastructure.Options;
 using Amazon.SQS;
@@ -18,8 +22,10 @@ using LinkGuardiao.Infrastructure.PostgreSQL;
 using LinkGuardiao.Infrastructure.Security;
 using Amazon.DynamoDBv2;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Diagnostics.HealthChecks;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using Serilog;
@@ -103,6 +109,7 @@ namespace LinkGuardiao.Api
 
             services.Configure<JwtOptions>(_configuration.GetSection(JwtOptions.SectionName));
             services.Configure<LinkLimitsOptions>(_configuration.GetSection(LinkLimitsOptions.SectionName));
+            services.Configure<LinkCacheOptions>(_configuration.GetSection(LinkCacheOptions.SectionName));
 
             var jwtOptions = _configuration.GetSection(JwtOptions.SectionName).Get<JwtOptions>() ?? new JwtOptions();
             if (string.IsNullOrWhiteSpace(jwtOptions.Secret))
@@ -294,6 +301,19 @@ namespace LinkGuardiao.Api
                 }
             }
 
+            var redisConnectionString = _configuration.GetConnectionString("Redis")
+                ?? _configuration["REDIS_CONNECTION_STRING"];
+            if (!string.IsNullOrWhiteSpace(redisConnectionString))
+            {
+                services.AddStackExchangeRedisCache(options => options.Configuration = redisConnectionString);
+            }
+            else
+            {
+                services.AddDistributedMemoryCache();
+            }
+
+            services.AddSingleton<ILinkReadCache, DistributedLinkReadCache>();
+
             var storageProvider = _configuration["STORAGE_PROVIDER"] ?? "dynamodb";
             if (storageProvider.Equals("postgresql", StringComparison.OrdinalIgnoreCase))
             {
@@ -323,6 +343,12 @@ namespace LinkGuardiao.Api
             {
                 services.AddSingleton<IAnalyticsQueue, NoOpAnalyticsQueue>();
             }
+
+            services.AddHealthChecks()
+                .AddCheck("self", () => HealthCheckResult.Healthy(), tags: new[] { "live" })
+                .AddCheck<StorageHealthCheck>("storage", tags: new[] { "ready" })
+                .AddCheck<AnalyticsQueueHealthCheck>("analytics_queue", tags: new[] { "ready" })
+                .AddCheck<LinkCacheHealthCheck>("link_cache", tags: new[] { "ready" });
 
             services.AddScoped<ILinkService, LinkService>();
             services.AddScoped<IUserService, UserService>();
@@ -376,9 +402,41 @@ namespace LinkGuardiao.Api
             app.UseEndpoints(endpoints =>
             {
                 endpoints.MapControllers();
-                endpoints.MapGet("/health", () => Results.Ok(new { status = "ok" }))
-                    .AllowAnonymous();
+                endpoints.MapHealthChecks("/health", CreateHealthCheckOptions(static _ => true)).AllowAnonymous();
+                endpoints.MapHealthChecks("/health/live", CreateHealthCheckOptions(static check => check.Tags.Contains("live"))).AllowAnonymous();
+                endpoints.MapHealthChecks("/health/ready", CreateHealthCheckOptions(static check => check.Tags.Contains("ready"))).AllowAnonymous();
             });
+        }
+
+        private static HealthCheckOptions CreateHealthCheckOptions(Func<HealthCheckRegistration, bool> predicate)
+        {
+            return new HealthCheckOptions
+            {
+                Predicate = predicate,
+                ResponseWriter = WriteHealthResponseAsync
+            };
+        }
+
+        private static Task WriteHealthResponseAsync(HttpContext context, Microsoft.Extensions.Diagnostics.HealthChecks.HealthReport report)
+        {
+            context.Response.ContentType = "application/json";
+
+            var payload = new
+            {
+                status = report.Status.ToString(),
+                totalDuration = report.TotalDuration.TotalMilliseconds,
+                checks = report.Entries.Select(entry => new
+                {
+                    name = entry.Key,
+                    status = entry.Value.Status.ToString(),
+                    description = entry.Value.Description,
+                    duration = entry.Value.Duration.TotalMilliseconds,
+                    error = entry.Value.Exception?.Message,
+                    tags = entry.Value.Tags.ToArray()
+                })
+            };
+
+            return context.Response.WriteAsync(JsonSerializer.Serialize(payload));
         }
 
         private static string GetClientId(HttpContext context)

@@ -15,7 +15,12 @@ namespace LinkGuardiao.Application.Tests
         {
             var links = new InMemoryLinkRepository();
             var hasher = new Pbkdf2PasswordHasher();
-            var service = new LinkService(links, new AllowAllDailyLimitStore(), hasher, Microsoft.Extensions.Options.Options.Create(new LinkLimitsOptions()));
+            var service = new LinkService(
+                links,
+                new AllowAllDailyLimitStore(),
+                hasher,
+                new NoOpLinkReadCache(),
+                Microsoft.Extensions.Options.Options.Create(new LinkLimitsOptions()));
 
             var link = await service.CreateLinkAsync(new LinkCreateDto
             {
@@ -34,7 +39,12 @@ namespace LinkGuardiao.Application.Tests
             await links.TryCreateAsync(new ShortenedLink { UserId = "user-1", OriginalUrl = "https://a.com", ShortCode = "abc123", Id = "abc123", CreatedAt = DateTime.UtcNow });
             await links.TryCreateAsync(new ShortenedLink { UserId = "user-2", OriginalUrl = "https://b.com", ShortCode = "def456", Id = "def456", CreatedAt = DateTime.UtcNow });
 
-            var service = new LinkService(links, new AllowAllDailyLimitStore(), new Pbkdf2PasswordHasher(), Microsoft.Extensions.Options.Options.Create(new LinkLimitsOptions()));
+            var service = new LinkService(
+                links,
+                new AllowAllDailyLimitStore(),
+                new Pbkdf2PasswordHasher(),
+                new NoOpLinkReadCache(),
+                Microsoft.Extensions.Options.Options.Create(new LinkLimitsOptions()));
             var result = await service.GetAllLinksAsync("user-1");
 
             Assert.Single(result);
@@ -45,6 +55,24 @@ namespace LinkGuardiao.Application.Tests
             public Task<bool> TryConsumeAsync(string userId, int limit, CancellationToken cancellationToken = default)
             {
                 return Task.FromResult(true);
+            }
+        }
+
+        private sealed class NoOpLinkReadCache : ILinkReadCache
+        {
+            public Task<ShortenedLink?> GetAsync(string shortCode, CancellationToken cancellationToken = default)
+            {
+                return Task.FromResult<ShortenedLink?>(null);
+            }
+
+            public Task SetAsync(ShortenedLink link, CancellationToken cancellationToken = default)
+            {
+                return Task.CompletedTask;
+            }
+
+            public Task RemoveAsync(string shortCode, CancellationToken cancellationToken = default)
+            {
+                return Task.CompletedTask;
             }
         }
 

@@ -1,6 +1,7 @@
 using LinkGuardiao.Application.DTOs;
 using LinkGuardiao.Application.Entities;
 using LinkGuardiao.Application.Interfaces;
+using LinkGuardiao.Application.Telemetry;
 
 namespace LinkGuardiao.Application.Services
 {
@@ -53,8 +54,16 @@ namespace LinkGuardiao.Application.Services
                     "Desktop";
             }
 
-            await _accessLogs.RecordAccessAsync(access);
-            await _links.IncrementClickCountAsync(shortCode);
+            var inserted = await _accessLogs.TryRecordAccessAsync(access);
+            if (inserted)
+            {
+                await _links.IncrementClickCountAsync(shortCode);
+            }
+            else
+            {
+                LinkGuardiaoMetrics.RecordAnalyticsEventDeduplicated();
+            }
+
             return access;
         }
 

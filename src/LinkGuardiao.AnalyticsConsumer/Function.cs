@@ -4,6 +4,7 @@ using Amazon.Lambda.Core;
 using Amazon.Lambda.SQSEvents;
 using LinkGuardiao.Application.Entities;
 using LinkGuardiao.Application.Interfaces;
+using LinkGuardiao.Application.Telemetry;
 using LinkGuardiao.Infrastructure.Data;
 using LinkGuardiao.Infrastructure.Options;
 using Microsoft.Extensions.DependencyInjection;
@@ -79,10 +80,17 @@ namespace LinkGuardiao.AnalyticsConsumer
                         AccessTime = message.AccessTime
                     };
 
-                    await _accessLogs.RecordAccessAsync(access);
-                    await _links.IncrementClickCountAsync(message.ShortCode);
-
-                    _logger.LogInformation("Processed access log for {ShortCode}", message.ShortCode);
+                    var inserted = await _accessLogs.TryRecordAccessAsync(access);
+                    if (inserted)
+                    {
+                        await _links.IncrementClickCountAsync(message.ShortCode);
+                        _logger.LogInformation("Processed access log for {ShortCode}", message.ShortCode);
+                    }
+                    else
+                    {
+                        LinkGuardiaoMetrics.RecordAnalyticsEventDeduplicated();
+                        _logger.LogInformation("Skipped duplicate access event for {ShortCode}", message.ShortCode);
+                    }
                 }
                 catch (Exception ex)
                 {

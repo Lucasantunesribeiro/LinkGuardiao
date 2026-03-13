@@ -2,6 +2,7 @@ using System.Security.Cryptography;
 using LinkGuardiao.Application.DTOs;
 using LinkGuardiao.Application.Entities;
 using LinkGuardiao.Application.Interfaces;
+using LinkGuardiao.Application.Telemetry;
 using LinkGuardiao.Application.Options;
 using LinkGuardiao.Application.Security;
 using Microsoft.Extensions.Options;
@@ -13,6 +14,7 @@ namespace LinkGuardiao.Application.Services
         private readonly ILinkRepository _links;
         private readonly IDailyLimitStore _dailyLimitStore;
         private readonly IPasswordHasher _passwordHasher;
+        private readonly ILinkReadCache _linkReadCache;
         private readonly LinkLimitsOptions _limits;
         private const string AllowedChars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
         private const int ShortCodeLength = 6;
@@ -21,11 +23,13 @@ namespace LinkGuardiao.Application.Services
             ILinkRepository links,
             IDailyLimitStore dailyLimitStore,
             IPasswordHasher passwordHasher,
+            ILinkReadCache linkReadCache,
             IOptions<LinkLimitsOptions> options)
         {
             _links = links;
             _dailyLimitStore = dailyLimitStore;
             _passwordHasher = passwordHasher;
+            _linkReadCache = linkReadCache;
             _limits = options.Value;
         }
 
@@ -41,7 +45,7 @@ namespace LinkGuardiao.Application.Services
 
         public async Task<ShortenedLink?> GetLinkByShortCodeAsync(string shortCode)
         {
-            var link = await _links.GetByShortCodeAsync(shortCode);
+            var link = await _linkReadCache.GetAsync(shortCode) ?? await _links.GetByShortCodeAsync(shortCode);
             if (link == null)
             {
                 return null;
@@ -55,9 +59,11 @@ namespace LinkGuardiao.Application.Services
 
             if (link.ExpiresAt.HasValue && link.ExpiresAt.Value <= now)
             {
+                await _linkReadCache.RemoveAsync(shortCode);
                 return null;
             }
 
+            await _linkReadCache.SetAsync(link);
             return link;
         }
 
@@ -100,6 +106,8 @@ namespace LinkGuardiao.Application.Services
 
                 if (await _links.TryCreateAsync(link))
                 {
+                    await _linkReadCache.SetAsync(link);
+                    LinkGuardiaoMetrics.RecordLinkCreated();
                     return link;
                 }
             }
@@ -134,12 +142,26 @@ namespace LinkGuardiao.Application.Services
             }
 
             await _links.UpdateAsync(link);
+            if (link.IsActive && (!link.ExpiresAt.HasValue || link.ExpiresAt > DateTime.UtcNow))
+            {
+                await _linkReadCache.SetAsync(link);
+            }
+            else
+            {
+                await _linkReadCache.RemoveAsync(link.ShortCode);
+            }
             return link;
         }
 
-        public Task<bool> DeleteLinkAsync(string id, string userId)
+        public async Task<bool> DeleteLinkAsync(string id, string userId)
         {
-            return _links.DeleteAsync(id, userId);
+            var deleted = await _links.DeleteAsync(id, userId);
+            if (deleted)
+            {
+                await _linkReadCache.RemoveAsync(id);
+            }
+
+            return deleted;
         }
 
         public async Task<bool> VerifyLinkPasswordAsync(string shortCode, string password)

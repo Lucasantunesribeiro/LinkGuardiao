@@ -116,10 +116,15 @@ namespace LinkGuardiao.Api.Tests
     {
         private readonly List<LinkAccess> _accesses = new();
 
-        public Task RecordAccessAsync(LinkAccess access, CancellationToken cancellationToken = default)
+        public Task<bool> TryRecordAccessAsync(LinkAccess access, CancellationToken cancellationToken = default)
         {
+            if (_accesses.Any(existing => existing.Id == access.Id))
+            {
+                return Task.FromResult(false);
+            }
+
             _accesses.Add(access);
-            return Task.CompletedTask;
+            return Task.FromResult(true);
         }
 
         public Task<IReadOnlyList<LinkAccess>> ListAccessesAsync(string shortCode, int limit, CancellationToken cancellationToken = default)
@@ -169,8 +174,11 @@ namespace LinkGuardiao.Api.Tests
                 DeviceType = message.DeviceType,
                 AccessTime = message.AccessTime
             };
-            await _accessLogs.RecordAccessAsync(access, ct);
-            await _links.IncrementClickCountAsync(message.ShortCode, ct);
+
+            if (await _accessLogs.TryRecordAccessAsync(access, ct))
+            {
+                await _links.IncrementClickCountAsync(message.ShortCode, ct);
+            }
         }
     }
 

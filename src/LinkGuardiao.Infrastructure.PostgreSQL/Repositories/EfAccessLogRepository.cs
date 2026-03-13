@@ -11,10 +11,23 @@ namespace LinkGuardiao.Infrastructure.PostgreSQL.Repositories
 
         public EfAccessLogRepository(LinkGuardiaoDbContext db) => _db = db;
 
-        public async Task RecordAccessAsync(LinkAccess access, CancellationToken ct = default)
+        public async Task<bool> TryRecordAccessAsync(LinkAccess access, CancellationToken ct = default)
         {
+            if (await _db.AccessLogs.AnyAsync(existing => existing.Id == access.Id, ct))
+            {
+                return false;
+            }
+
             _db.AccessLogs.Add(access);
-            await _db.SaveChangesAsync(ct);
+            try
+            {
+                await _db.SaveChangesAsync(ct);
+                return true;
+            }
+            catch (DbUpdateException)
+            {
+                return false;
+            }
         }
 
         public async Task<IReadOnlyList<LinkAccess>> ListAccessesAsync(string shortCode, int limit, CancellationToken ct = default)

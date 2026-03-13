@@ -3,6 +3,7 @@ using Amazon.SQS;
 using Amazon.SQS.Model;
 using LinkGuardiao.Application.Entities;
 using LinkGuardiao.Application.Interfaces;
+using LinkGuardiao.Application.Telemetry;
 using LinkGuardiao.Infrastructure.Options;
 using Microsoft.Extensions.Options;
 
@@ -22,6 +23,7 @@ namespace LinkGuardiao.Infrastructure.Messaging
         public Task EnqueueAsync(AccessLogMessage message, CancellationToken ct = default)
         {
             var json = JsonSerializer.Serialize(message);
+            LinkGuardiaoMetrics.RecordAnalyticsMessageEnqueued();
             return _sqs.SendMessageAsync(new SendMessageRequest
             {
                 QueueUrl = _options.AnalyticsQueueUrl,

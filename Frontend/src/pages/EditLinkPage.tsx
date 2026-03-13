@@ -33,7 +33,7 @@ const EditLinkPage = () => {
         setIsActive(link.isActive);
         setHasPassword(!!link.isPasswordProtected);
         setExpiresAt(link.expiresAt ? new Date(link.expiresAt).toISOString().slice(0, 16) : '');
-      } catch (error) {
+      } catch {
         toast.error('Erro ao carregar link.');
       } finally {
         setLoading(false);
@@ -83,7 +83,7 @@ const EditLinkPage = () => {
 
       toast.success('Link atualizado com sucesso!');
       navigate('/dashboard');
-    } catch (error) {
+    } catch {
       toast.error('Erro ao atualizar link.');
     } finally {
       setIsSubmitting(false);

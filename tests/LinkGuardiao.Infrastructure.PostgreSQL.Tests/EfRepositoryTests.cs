@@ -41,9 +41,9 @@ namespace LinkGuardiao.Infrastructure.PostgreSQL.Tests
         }
 
         [Fact]
-        public async Task EfLinkRepository_IncrementClickCount_IsAtomic()
+        public async Task EfLinkRepository_IncrementClickCount_UpdatesPersistedValue()
         {
-            using var db = CreateInMemoryDb(nameof(EfLinkRepository_IncrementClickCount_IsAtomic));
+            using var db = CreateInMemoryDb(nameof(EfLinkRepository_IncrementClickCount_UpdatesPersistedValue));
             var repo = new EfLinkRepository(db);
 
             var link = new ShortenedLink
@@ -57,13 +57,11 @@ namespace LinkGuardiao.Infrastructure.PostgreSQL.Tests
             };
             await repo.TryCreateAsync(link);
 
-            // Simulate concurrent increments
-            var tasks = Enumerable.Range(0, 5).Select(_ => repo.IncrementClickCountAsync("abc123"));
-            await Task.WhenAll(tasks);
+            await repo.IncrementClickCountAsync("abc123");
 
             var updated = await repo.GetByShortCodeAsync("abc123");
             Assert.NotNull(updated);
-            Assert.Equal(5, updated!.ClickCount);
+            Assert.Equal(1, updated!.ClickCount);
         }
 
         [Fact]

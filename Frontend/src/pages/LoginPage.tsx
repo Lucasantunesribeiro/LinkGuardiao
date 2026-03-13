@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../features/auth/AuthContext';
+import { getApiErrorMessage } from '../lib/api/errors';
 import { toast } from 'react-toastify';
 import { FiMail, FiLock, FiEye, FiEyeOff } from 'react-icons/fi';
 import Input from '../components/Input';
@@ -28,9 +29,8 @@ const LoginPage = () => {
       await signIn(email, password);
       toast.success('Login realizado com sucesso!');
       navigate('/dashboard');
-    } catch (error: any) {
-      const message = error.response?.data?.message || 'Erro ao fazer login. Verifique suas credenciais.';
-      toast.error(message);
+    } catch (error) {
+      toast.error(getApiErrorMessage(error, 'Erro ao fazer login. Verifique suas credenciais.'));
     } finally {
       setIsSubmitting(false);
     }

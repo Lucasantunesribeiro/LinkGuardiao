@@ -2,6 +2,12 @@ import { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { API_ROOT, API_BASE_URL } from '../lib/config';
 import { LinkAccessGrantResponse, PublicLinkLookup } from '../lib/api/types';
+import { redirectToUrl } from '../lib/navigation';
+
+const redirectToResolvedLink = (shortCode: string, accessGrant?: string) => {
+  const grantQuery = accessGrant ? `?grant=${encodeURIComponent(accessGrant)}` : '';
+  redirectToUrl(`${API_ROOT}/r/${shortCode}${grantQuery}`);
+};
 
 const RedirectPage = () => {
   const { shortCode } = useParams();
@@ -13,10 +19,12 @@ const RedirectPage = () => {
   useEffect(() => {
     if (!shortCode) return;
 
-    fetch(`${API_BASE_URL}/links/code/${shortCode}`)
+    const abortController = new AbortController();
+
+    fetch(`${API_BASE_URL}/links/code/${shortCode}`, { signal: abortController.signal })
       .then(res => {
         if (!res.ok) {
-          window.location.href = `${API_ROOT}/r/${shortCode}`;
+          redirectToResolvedLink(shortCode);
           return null;
         }
         return res.json() as Promise<PublicLinkLookup>;
@@ -24,14 +32,20 @@ const RedirectPage = () => {
       .then(data => {
         if (!data) return;
         if (!data.isPasswordProtected) {
-          window.location.href = `${API_ROOT}/r/${shortCode}`;
+          redirectToResolvedLink(shortCode);
           return;
         }
         setLoading(false);
       })
-      .catch(() => {
-        window.location.href = `${API_ROOT}/r/${shortCode}`;
+      .catch(error => {
+        if (error instanceof DOMException && error.name === 'AbortError') {
+          return;
+        }
+
+        redirectToResolvedLink(shortCode);
       });
+
+    return () => abortController.abort();
   }, [shortCode]);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -50,7 +64,7 @@ const RedirectPage = () => {
 
       if (res.ok) {
         const data = (await res.json()) as LinkAccessGrantResponse;
-        window.location.href = `${API_ROOT}/r/${shortCode}?grant=${encodeURIComponent(data.accessGrant)}`;
+        redirectToResolvedLink(shortCode, data.accessGrant);
       } else if (res.status === 401) {
         setError('Senha incorreta. Tente novamente.');
       } else {

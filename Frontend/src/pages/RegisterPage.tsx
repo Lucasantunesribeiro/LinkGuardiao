@@ -1,9 +1,17 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../features/auth/AuthContext';
+import { getApiErrorMessage, getApiValidationErrors, hasApiRequest, hasApiResponse } from '../lib/api/errors';
 import { toast } from 'react-toastify';
 import { FiUser, FiMail, FiLock } from 'react-icons/fi';
 import Input from '../components/Input';
+
+type RegisterFormErrors = {
+  name?: string;
+  email?: string;
+  password?: string;
+  confirmPassword?: string;
+};
 
 const RegisterPage = () => {
   const [name, setName] = useState('');
@@ -11,12 +19,12 @@ const RegisterPage = () => {
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [errors, setErrors] = useState<{name?: string, email?: string, password?: string, confirmPassword?: string}>({});
+  const [errors, setErrors] = useState<RegisterFormErrors>({});
   const { signUp } = useAuth();
   const navigate = useNavigate();
 
   const validateForm = () => {
-    const newErrors: {name?: string, email?: string, password?: string, confirmPassword?: string} = {};
+    const newErrors: RegisterFormErrors = {};
     let isValid = true;
 
     if (!name.trim()) {
@@ -46,14 +54,15 @@ const RegisterPage = () => {
     }
 
     setErrors(newErrors);
-    return isValid;
+    return { isValid, newErrors };
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!validateForm()) {
-      const errorMessages = Object.values(errors).filter(Boolean);
+    const { isValid, newErrors } = validateForm();
+    if (!isValid) {
+      const errorMessages = Object.values(newErrors).filter(Boolean);
       if (errorMessages.length > 0) {
         toast.error(errorMessages[0]);
       }
@@ -66,25 +75,24 @@ const RegisterPage = () => {
       await signUp(name, email, password);
       toast.success('Registro realizado com sucesso! Faça login para continuar.');
       navigate('/login');
-    } catch (error: any) {
-      if (error.response) {
-        const message = error.response.data?.message || 'Erro ao registrar. Tente novamente.';
-        toast.error(message);
-        
-        if (error.response.status === 400 && error.response.data.errors) {
-          const serverErrors = error.response.data.errors;
-          const newErrors: any = {};
-          
-          Object.keys(serverErrors).forEach(key => {
-            const formattedKey = key.charAt(0).toLowerCase() + key.slice(1);
-            newErrors[formattedKey] = serverErrors[key][0];
-          });
-          setErrors(newErrors);
+    } catch (error) {
+      if (hasApiResponse(error)) {
+        toast.error(getApiErrorMessage(error, 'Erro ao registrar. Tente novamente.'));
+
+        const serverErrors = getApiValidationErrors(error);
+        if (serverErrors) {
+          const mappedErrors = Object.entries(serverErrors).reduce<RegisterFormErrors>((accumulator, [key, value]) => {
+            const formattedKey = key.charAt(0).toLowerCase() + key.slice(1) as keyof RegisterFormErrors;
+            accumulator[formattedKey] = value[0];
+            return accumulator;
+          }, {});
+
+          setErrors(mappedErrors);
         }
-      } else if (error.request) {
+      } else if (hasApiRequest(error)) {
         toast.error('Não foi possível conectar ao servidor. Verifique sua conexão.');
       } else {
-        toast.error('Erro ao configurar a requisição: ' + error.message);
+        toast.error(`Erro ao configurar a requisição: ${getApiErrorMessage(error, 'Erro desconhecido.')}`);
       }
     } finally {
       setIsSubmitting(false);

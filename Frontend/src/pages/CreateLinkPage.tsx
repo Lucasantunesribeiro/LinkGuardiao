@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { api } from '../lib/api/client';
+import { getApiErrorMessage } from '../lib/api/errors';
 import { LinkCreateRequest } from '../lib/api/types';
 import { toast } from 'react-toastify';
 import { FiLink, FiType, FiClock, FiLock } from 'react-icons/fi';
@@ -66,9 +67,8 @@ const CreateLinkPage = () => {
       await api.post('/links', payload);
       toast.success('Link criado com sucesso!');
       navigate('/dashboard');
-    } catch (error: any) {
-      const errorMessage = error.response?.data?.message || 'Ocorreu um erro ao criar o link';
-      toast.error(errorMessage);
+    } catch (error) {
+      toast.error(getApiErrorMessage(error, 'Ocorreu um erro ao criar o link'));
     } finally {
       setIsSubmitting(false);
     }

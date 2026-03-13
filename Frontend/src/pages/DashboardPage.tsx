@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { api } from '../lib/api/client';
+import { getApiErrorMessage } from '../lib/api/errors';
 import { ShortenedLink } from '../lib/api/types';
 import { API_ROOT } from '../lib/config';
 import { toast } from 'react-toastify';
@@ -19,10 +20,9 @@ const DashboardPage = () => {
         const response = await api.get('/links');
         setLinks(response.data);
         setFetchError(false);
-      } catch (error: any) {
-        const errorMessage = error.response?.data?.message || 'Erro ao buscar links';
+      } catch (error) {
         setFetchError(true);
-        toast.error(errorMessage);
+        toast.error(getApiErrorMessage(error, 'Erro ao buscar links'));
       } finally {
         setLoading(false);
       }
@@ -38,11 +38,10 @@ const DashboardPage = () => {
 
     try {
       await api.delete(`/links/${id}`);
-      setLinks(links.filter(link => link.id !== id));
+      setLinks(currentLinks => currentLinks.filter(link => link.id !== id));
       toast.success('Link excluído com sucesso!');
-    } catch (error: any) {
-      const errorMessage = error.response?.data?.message || 'Erro ao excluir link';
-      toast.error(errorMessage);
+    } catch (error) {
+      toast.error(getApiErrorMessage(error, 'Erro ao excluir link'));
     }
   };
 

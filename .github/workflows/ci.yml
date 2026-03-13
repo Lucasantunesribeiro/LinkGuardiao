@@ -12,6 +12,8 @@ permissions:
 jobs:
   build-test:
     runs-on: ubuntu-latest
+    env:
+      RUN_POSTGRESQL_TESTCONTAINERS: true
 
     steps:
       - name: Checkout
@@ -27,16 +29,43 @@ jobs:
         with:
           node-version: '20'
           cache: 'npm'
-          cache-dependency-path: Frontend/package-lock.json
+          cache-dependency-path: |
+            Frontend/package-lock.json
+            infra/cdk/package-lock.json
 
       - name: Restore
         run: dotnet restore LinkGuardiao.sln
 
-      - name: Build
-        run: dotnet build LinkGuardiao.sln --no-restore
+      - name: Dependency scan (.NET)
+        run: dotnet list LinkGuardiao.sln package --vulnerable --include-transitive
 
-      - name: Test
-        run: dotnet test LinkGuardiao.sln --no-build
+      - name: Build
+        run: dotnet build LinkGuardiao.sln --configuration Release --no-restore
+
+      - name: Application tests with coverage gate
+        run: dotnet test tests/LinkGuardiao.Application.Tests/LinkGuardiao.Application.Tests.csproj --configuration Release --no-build /p:CollectCoverage=true /p:CoverletOutputFormat=cobertura /p:CoverletOutput=./TestResults/application/ /p:Threshold=30 /p:ThresholdType=line /p:ThresholdStat=total '/p:Include=[LinkGuardiao.Application]*'
+
+      - name: API tests with coverage gate
+        run: dotnet test tests/LinkGuardiao.Api.Tests/LinkGuardiao.Api.Tests.csproj --configuration Release --no-build /p:CollectCoverage=true /p:CoverletOutputFormat=cobertura /p:CoverletOutput=./TestResults/api/ /p:Threshold=30 /p:ThresholdType=line /p:ThresholdStat=total
+
+      - name: PostgreSQL tests with coverage gate
+        run: dotnet test tests/LinkGuardiao.Infrastructure.PostgreSQL.Tests/LinkGuardiao.Infrastructure.PostgreSQL.Tests.csproj --configuration Release --no-build /p:CollectCoverage=true /p:CoverletOutputFormat=cobertura /p:CoverletOutput=./TestResults/postgresql/ /p:Threshold=15 /p:ThresholdType=line /p:ThresholdStat=total '/p:Include=[LinkGuardiao.Infrastructure.PostgreSQL]*'
+
+      - name: Install frontend dependencies
+        working-directory: Frontend
+        run: npm ci
+
+      - name: Dependency scan (Frontend)
+        working-directory: Frontend
+        run: npm audit --audit-level=high
+
+      - name: Frontend lint
+        working-directory: Frontend
+        run: npm run lint
+
+      - name: Frontend tests
+        working-directory: Frontend
+        run: npm run test:run
 
       - name: Publish Lambda artifact
         run: dotnet publish src/LinkGuardiao.Api/LinkGuardiao.Api.csproj -c Release -r linux-x64 --self-contained false -o artifacts/lambda /p:GenerateRuntimeConfigurationFiles=true
@@ -44,15 +73,15 @@ jobs:
       - name: Frontend build
         working-directory: Frontend
         env:
-          VITE_API_BASE_URL: ${{ secrets.VITE_API_BASE_URL }}
-        run: |
-          npm ci
-          npm run build
+          VITE_API_BASE_URL: ${{ secrets.VITE_API_BASE_URL || 'https://api.example.com' }}
+        run: npm run build
 
       - name: CDK synth
         working-directory: infra/cdk
         run: |
           npm ci
+          npm audit --audit-level=high
+          npm run build
           npx cdk synth -c env=dev
 
       - name: Deploy to Cloudflare Pages

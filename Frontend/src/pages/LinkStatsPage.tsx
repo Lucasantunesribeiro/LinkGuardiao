@@ -29,7 +29,7 @@ const LinkStatsPage = () => {
         setLoading(true);
         const response = await api.get<LinkStatsDto>(`/links/${id}/stats`);
         setStats(response.data);
-      } catch (err) {
+      } catch {
         setError('Erro ao carregar estatisticas do link');
       } finally {
         setLoading(false);

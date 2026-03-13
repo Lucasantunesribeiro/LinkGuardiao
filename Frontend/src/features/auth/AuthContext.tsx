@@ -19,13 +19,12 @@ interface AuthProviderProps {
 }
 
 export const AuthProvider = ({ children }: AuthProviderProps) => {
+  const hasStoredToken = Boolean(localStorage.getItem(TOKEN_STORAGE_KEY));
   const [user, setUser] = useState<UserDto | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(hasStoredToken);
 
   useEffect(() => {
-    const token = localStorage.getItem(TOKEN_STORAGE_KEY);
-    if (!token) {
-      setLoading(false);
+    if (!hasStoredToken) {
       return;
     }
 
@@ -40,7 +39,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
       .finally(() => {
         setLoading(false);
       });
-  }, []);
+  }, [hasStoredToken]);
 
   const signIn = async (email: string, password: string) => {
     const response = await api.post<AuthResult>('/auth/login', { email, password });

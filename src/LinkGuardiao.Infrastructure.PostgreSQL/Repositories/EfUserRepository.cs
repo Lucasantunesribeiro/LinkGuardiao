@@ -1,7 +1,9 @@
 using LinkGuardiao.Application.Entities;
+using LinkGuardiao.Application.Exceptions;
 using LinkGuardiao.Application.Interfaces;
 using LinkGuardiao.Infrastructure.PostgreSQL.Persistence;
 using Microsoft.EntityFrameworkCore;
+using Npgsql;
 
 namespace LinkGuardiao.Infrastructure.PostgreSQL.Repositories
 {
@@ -23,7 +25,15 @@ namespace LinkGuardiao.Infrastructure.PostgreSQL.Repositories
         public async Task CreateAsync(User user, CancellationToken ct = default)
         {
             _db.Users.Add(user);
-            await _db.SaveChangesAsync(ct);
+            try
+            {
+                await _db.SaveChangesAsync(ct);
+            }
+            catch (DbUpdateException ex) when (ex.InnerException is PostgresException postgresException &&
+                                               postgresException.SqlState == PostgresErrorCodes.UniqueViolation)
+            {
+                throw new UserExistsException();
+            }
         }
     }
 }

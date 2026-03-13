@@ -18,6 +18,7 @@ namespace LinkGuardiao.Infrastructure.PostgreSQL
             services.AddScoped<ILinkRepository, EfLinkRepository>();
             services.AddScoped<IUserRepository, EfUserRepository>();
             services.AddScoped<IAccessLogRepository, EfAccessLogRepository>();
+            services.AddScoped<IDailyLimitStore, EfDailyLimitStore>();
             services.AddScoped<IRefreshTokenRepository, EfRefreshTokenRepository>();
 
             return services;

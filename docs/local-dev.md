@@ -1,103 +1,83 @@
 # Local Development Guide
 
-## Backend
+## 1. Start dependencies
+
+Use the shared local stack to run PostgreSQL, DynamoDB Local and Redis:
+
+```bash
+docker compose up -d
+```
+
+## 2. Environment
+
+Copy the backend env file and keep the defaults if you want to use the local stack:
+
+```bash
+cp .env.example .env
+```
+
+Important defaults already included in `.env.example`:
+
+- `DDB_SERVICE_URL=http://localhost:8000`
+- `POSTGRESQL_CONNECTION_STRING=Host=localhost;Port=54329;Database=linkguardiao;Username=linkguardiao;Password=linkguardiao`
+- `REDIS_CONNECTION_STRING=localhost:6380`
+- `DDB_TABLE_REFRESH_TOKENS=linkguardiao-refresh-tokens-dev`
+- `DDB_TABLE_EMAIL_LOCKS=linkguardiao-email-locks-dev`
+
+To run the API on PostgreSQL instead of DynamoDB, set:
+
+```bash
+STORAGE_PROVIDER=postgresql
+```
+
+## 3. Bootstrap PostgreSQL schema
+
+Apply the EF Core migration:
+
+```bash
+dotnet ef database update --project src/LinkGuardiao.Infrastructure.PostgreSQL --startup-project src/LinkGuardiao.Infrastructure.PostgreSQL
+```
+
+## 4. Bootstrap DynamoDB Local tables
+
+Create the DynamoDB Local tables used by links, auth, analytics and rate limits:
+
+```bash
+pwsh ./scripts/local/init-dynamodb.ps1
+```
+
+## 5. Run the backend
 
 ```bash
 dotnet run --project src/LinkGuardiao.Api
 ```
 
-The API starts on **http://localhost:5000** (HTTP) by default.
+The API starts on `http://localhost:5000`.
 
-### Configuration
-
-`src/LinkGuardiao.Api/appsettings.Development.json` already includes CORS origins for the frontend dev server:
-
-```json
-{
-  "Cors": {
-    "AllowedOrigins": [
-      "http://localhost:5173",
-      "http://localhost:5174"
-    ]
-  }
-}
-```
-
-No AWS credentials are needed for local development — the test suite uses in-memory repositories.
-Running the API locally against DynamoDB requires valid AWS credentials and the DynamoDB table names configured (see `.env.example`).
-
-### DynamoDB Local (optional)
-
-If you want to run against a local DynamoDB instead of AWS:
-
-```bash
-docker run -p 8000:8000 amazon/dynamodb-local
-```
-
-Then set in `appsettings.Development.json`:
-
-```json
-{
-  "DynamoDb": {
-    "ServiceUrl": "http://localhost:8000"
-  }
-}
-```
-
----
-
-## Frontend
+## 6. Run the frontend
 
 ```bash
 cd Frontend
 npm ci
-npm run dev   # starts on http://localhost:5173
+npm run dev
 ```
 
-### Environment variables
+`Frontend/.env.example` already points to `http://localhost:5000`.
 
-Create `Frontend/.env.local` (gitignored):
-
-```
-VITE_API_BASE_URL=http://localhost:5000
-```
-
-This points the frontend at the local backend. Do **not** commit `.env.local`.
-
----
-
-## Running Tests
-
-No AWS credentials required — all tests use in-memory repositories.
+## 7. Validation commands
 
 ```bash
-# All tests
-dotnet test
-
-# Integration tests only
-dotnet test tests/LinkGuardiao.Api.Tests
-
-# Unit tests only
-dotnet test tests/LinkGuardiao.Application.Tests
-
-# Single test
-dotnet test --filter "FullyQualifiedName~LinkFlowTests.CreateLinkAndFetchStats"
-```
-
----
-
-## Frontend Build Check
-
-```bash
+dotnet test LinkGuardiao.sln
 cd Frontend && npm run build
+cd infra/cdk && npm ci && npx cdk synth -c env=dev
 ```
 
----
-
-## Port Summary
+## Port summary
 
 | Service | Port |
 |---|---|
 | Backend API | 5000 |
 | Frontend dev server | 5173 |
-| DynamoDB Local (optional) | 8000 |
+| PostgreSQL | 54329 |
+| DynamoDB Local | 8000 |
+| Redis | 6380 |

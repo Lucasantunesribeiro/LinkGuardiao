@@ -2,6 +2,7 @@ using System.Text.Json;
 using Amazon.DynamoDBv2;
 using Amazon.Lambda.Core;
 using Amazon.Lambda.SQSEvents;
+using Amazon.Runtime;
 using LinkGuardiao.Application.Entities;
 using LinkGuardiao.Application.Interfaces;
 using LinkGuardiao.Application.Telemetry;
@@ -30,12 +31,30 @@ namespace LinkGuardiao.AnalyticsConsumer
                 LinksTableName = Environment.GetEnvironmentVariable("DDB_TABLE_LINKS") ?? string.Empty,
                 AccessTableName = Environment.GetEnvironmentVariable("DDB_TABLE_ACCESS") ?? string.Empty,
                 UsersTableName = Environment.GetEnvironmentVariable("DDB_TABLE_USERS") ?? string.Empty,
-                DailyLimitsTableName = Environment.GetEnvironmentVariable("DDB_TABLE_DAILY_LIMITS") ?? string.Empty
+                DailyLimitsTableName = Environment.GetEnvironmentVariable("DDB_TABLE_DAILY_LIMITS") ?? string.Empty,
+                ServiceUrl = Environment.GetEnvironmentVariable("DDB_SERVICE_URL") ?? string.Empty
             };
 
             services.AddSingleton(Options.Create(dynamoOptions));
-            services.AddDefaultAWSOptions(new Amazon.Extensions.NETCore.Setup.AWSOptions());
-            services.AddAWSService<IAmazonDynamoDB>();
+            if (!string.IsNullOrWhiteSpace(dynamoOptions.ServiceUrl))
+            {
+                var region = Environment.GetEnvironmentVariable("AWS_REGION") ?? "us-east-1";
+                services.AddSingleton<IAmazonDynamoDB>(_ =>
+                    new AmazonDynamoDBClient(
+                        new BasicAWSCredentials("local", "local"),
+                        new AmazonDynamoDBConfig
+                        {
+                            ServiceURL = dynamoOptions.ServiceUrl,
+                            UseHttp = dynamoOptions.ServiceUrl.StartsWith("http://", StringComparison.OrdinalIgnoreCase),
+                            AuthenticationRegion = region
+                        }));
+            }
+            else
+            {
+                services.AddDefaultAWSOptions(new Amazon.Extensions.NETCore.Setup.AWSOptions());
+                services.AddAWSService<IAmazonDynamoDB>();
+            }
+
             services.AddSingleton<ILinkRepository, DynamoDbLinkRepository>();
             services.AddSingleton<IAccessLogRepository, DynamoDbAccessLogRepository>();
             services.AddLogging(b => b.AddConsole());

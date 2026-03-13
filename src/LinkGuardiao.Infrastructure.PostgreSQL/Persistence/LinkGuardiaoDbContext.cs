@@ -11,6 +11,7 @@ namespace LinkGuardiao.Infrastructure.PostgreSQL.Persistence
         public DbSet<User> Users { get; set; } = null!;
         public DbSet<LinkAccess> AccessLogs { get; set; } = null!;
         public DbSet<RefreshToken> RefreshTokens { get; set; } = null!;
+        public DbSet<DailyLimitCounter> DailyLimitCounters { get; set; } = null!;
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -61,6 +62,19 @@ namespace LinkGuardiao.Infrastructure.PostgreSQL.Persistence
                 e.Property(r => r.ExpiresAt).HasConversion(
                     v => v.ToUniversalTime(),
                     v => DateTime.SpecifyKind(v, DateTimeKind.Utc));
+            });
+
+            modelBuilder.Entity<DailyLimitCounter>(e =>
+            {
+                e.ToTable("daily_limit_counters");
+                e.HasKey(counter => counter.LimitKey);
+                e.Property(counter => counter.LimitKey).HasColumnName("limit_key");
+                e.Property(counter => counter.CurrentCount).HasColumnName("current_count");
+                e.Property(counter => counter.ExpiresAtUtc)
+                    .HasColumnName("expires_at_utc")
+                    .HasConversion(
+                        value => value.ToUniversalTime(),
+                        value => DateTime.SpecifyKind(value, DateTimeKind.Utc));
             });
         }
     }

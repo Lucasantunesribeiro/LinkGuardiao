@@ -18,6 +18,7 @@ using LinkGuardiao.Infrastructure.Caching;
 using LinkGuardiao.Infrastructure.Messaging;
 using LinkGuardiao.Infrastructure.Options;
 using Amazon.SQS;
+using Amazon.Runtime;
 using LinkGuardiao.Infrastructure.PostgreSQL;
 using LinkGuardiao.Infrastructure.Security;
 using Amazon.DynamoDBv2;
@@ -276,6 +277,7 @@ namespace LinkGuardiao.Api
                 DailyLimitsTableName = _configuration["DDB_TABLE_DAILY_LIMITS"] ?? _configuration["DynamoDb:DailyLimitsTableName"] ?? string.Empty,
                 RefreshTokensTableName = _configuration["DDB_TABLE_REFRESH_TOKENS"] ?? _configuration["DynamoDb:RefreshTokensTableName"] ?? string.Empty,
                 EmailLocksTableName = _configuration["DDB_TABLE_EMAIL_LOCKS"] ?? _configuration["DynamoDb:EmailLocksTableName"] ?? string.Empty,
+                ServiceUrl = _configuration["DDB_SERVICE_URL"] ?? _configuration["DynamoDb:ServiceUrl"] ?? string.Empty,
                 AccessRetentionDays = _configuration.GetValue<int?>("DynamoDb:AccessRetentionDays") ?? 30
             };
 
@@ -287,6 +289,7 @@ namespace LinkGuardiao.Api
                 options.DailyLimitsTableName = dynamoOptions.DailyLimitsTableName;
                 options.RefreshTokensTableName = dynamoOptions.RefreshTokensTableName;
                 options.EmailLocksTableName = dynamoOptions.EmailLocksTableName;
+                options.ServiceUrl = dynamoOptions.ServiceUrl;
                 options.AccessRetentionDays = dynamoOptions.AccessRetentionDays;
             });
 
@@ -295,7 +298,9 @@ namespace LinkGuardiao.Api
                 if (string.IsNullOrWhiteSpace(dynamoOptions.LinksTableName) ||
                     string.IsNullOrWhiteSpace(dynamoOptions.UsersTableName) ||
                     string.IsNullOrWhiteSpace(dynamoOptions.AccessTableName) ||
-                    string.IsNullOrWhiteSpace(dynamoOptions.DailyLimitsTableName))
+                    string.IsNullOrWhiteSpace(dynamoOptions.DailyLimitsTableName) ||
+                    string.IsNullOrWhiteSpace(dynamoOptions.RefreshTokensTableName) ||
+                    string.IsNullOrWhiteSpace(dynamoOptions.EmailLocksTableName))
                 {
                     throw new InvalidOperationException("DynamoDb table names are required in production.");
                 }
@@ -324,7 +329,7 @@ namespace LinkGuardiao.Api
             }
             else
             {
-                services.AddAWSService<IAmazonDynamoDB>();
+                RegisterDynamoDbClient(services, dynamoOptions);
                 services.AddSingleton<ILinkRepository, DynamoDbLinkRepository>();
                 services.AddSingleton<IUserRepository, DynamoDbUserRepository>();
                 services.AddSingleton<IAccessLogRepository, DynamoDbAccessLogRepository>();
@@ -437,6 +442,26 @@ namespace LinkGuardiao.Api
             };
 
             return context.Response.WriteAsync(JsonSerializer.Serialize(payload));
+        }
+
+        private void RegisterDynamoDbClient(IServiceCollection services, DynamoDbOptions dynamoOptions)
+        {
+            if (!string.IsNullOrWhiteSpace(dynamoOptions.ServiceUrl))
+            {
+                var region = _configuration["AWS_REGION"] ?? "us-east-1";
+                services.AddSingleton<IAmazonDynamoDB>(_ =>
+                    new AmazonDynamoDBClient(
+                        new BasicAWSCredentials("local", "local"),
+                        new AmazonDynamoDBConfig
+                        {
+                            ServiceURL = dynamoOptions.ServiceUrl,
+                            UseHttp = dynamoOptions.ServiceUrl.StartsWith("http://", StringComparison.OrdinalIgnoreCase),
+                            AuthenticationRegion = region
+                        }));
+                return;
+            }
+
+            services.AddAWSService<IAmazonDynamoDB>();
         }
 
         private static string GetClientId(HttpContext context)

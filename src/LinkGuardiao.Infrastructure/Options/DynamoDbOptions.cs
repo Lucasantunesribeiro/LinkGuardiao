@@ -10,6 +10,7 @@ namespace LinkGuardiao.Infrastructure.Options
         public string DailyLimitsTableName { get; set; } = string.Empty;
         public string RefreshTokensTableName { get; set; } = string.Empty;
         public string EmailLocksTableName { get; set; } = string.Empty;
+        public string ServiceUrl { get; set; } = string.Empty;
         public int AccessRetentionDays { get; set; } = 30;
     }
 }

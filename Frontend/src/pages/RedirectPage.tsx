@@ -1,15 +1,10 @@
 import { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { API_ROOT, API_BASE_URL } from '../lib/config';
-
-interface LinkInfo {
-  originalUrl: string;
-  isPasswordProtected: boolean;
-}
+import { LinkAccessGrantResponse, PublicLinkLookup } from '../lib/api/types';
 
 const RedirectPage = () => {
   const { shortCode } = useParams();
-  const [linkInfo, setLinkInfo] = useState<LinkInfo | null>(null);
   const [loading, setLoading] = useState(true);
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
@@ -24,7 +19,7 @@ const RedirectPage = () => {
           window.location.href = `${API_ROOT}/r/${shortCode}`;
           return null;
         }
-        return res.json() as Promise<LinkInfo>;
+        return res.json() as Promise<PublicLinkLookup>;
       })
       .then(data => {
         if (!data) return;
@@ -32,7 +27,6 @@ const RedirectPage = () => {
           window.location.href = `${API_ROOT}/r/${shortCode}`;
           return;
         }
-        setLinkInfo(data);
         setLoading(false);
       })
       .catch(() => {
@@ -48,14 +42,15 @@ const RedirectPage = () => {
     setError('');
 
     try {
-      const res = await fetch(`${API_BASE_URL}/links/verify-password/${shortCode}`, {
+      const res = await fetch(`${API_BASE_URL}/links/access-grant/${shortCode}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(password),
+        body: JSON.stringify({ password }),
       });
 
       if (res.ok) {
-        window.location.href = linkInfo!.originalUrl;
+        const data = (await res.json()) as LinkAccessGrantResponse;
+        window.location.href = `${API_ROOT}/r/${shortCode}?grant=${encodeURIComponent(data.accessGrant)}`;
       } else if (res.status === 401) {
         setError('Senha incorreta. Tente novamente.');
       } else {

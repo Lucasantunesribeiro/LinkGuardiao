@@ -80,6 +80,30 @@ namespace LinkGuardiao.Api.Tests
         }
 
         [Fact]
+        public async Task PublicShortCodeLookup_DoesNotExposeOriginalUrl()
+        {
+            var auth = await RegisterAndLoginAsync("public-lookup@example.com");
+            _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", auth.Token);
+
+            var createResponse = await _client.PostAsJsonAsync("/api/links", new
+            {
+                originalUrl = "https://example.com/private-destination",
+                title = "Lookup Test",
+                password = "secret1234"
+            });
+            Assert.Equal(HttpStatusCode.Created, createResponse.StatusCode);
+            var link = await createResponse.Content.ReadFromJsonAsync<LinkResponse>();
+
+            _client.DefaultRequestHeaders.Authorization = null;
+            var lookupResponse = await _client.GetAsync($"/api/links/code/{link!.ShortCode}");
+            lookupResponse.EnsureSuccessStatusCode();
+
+            var payload = await lookupResponse.Content.ReadFromJsonAsync<JsonElement>();
+            Assert.True(payload.GetProperty("isPasswordProtected").GetBoolean());
+            Assert.False(payload.TryGetProperty("originalUrl", out _));
+        }
+
+        [Fact]
         public async Task PasswordProtectedLink_NoHeader_Returns401WithRequiresPasswordFlag()
         {
             var auth = await RegisterAndLoginAsync("pw-noheader@example.com");
@@ -148,6 +172,41 @@ namespace LinkGuardiao.Api.Tests
             request.Headers.Add("X-Link-Password", "rightpass1234");
             var redirectResponse = await _client.SendAsync(request);
             Assert.Equal(HttpStatusCode.Redirect, redirectResponse.StatusCode);
+        }
+
+        [Fact]
+        public async Task PasswordProtectedLink_AccessGrant_RedirectsThroughOfficialEndpoint()
+        {
+            var auth = await RegisterAndLoginAsync("pw-grant@example.com");
+            _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", auth.Token);
+
+            var createResponse = await _client.PostAsJsonAsync("/api/links", new
+            {
+                originalUrl = "https://example.com",
+                title = "Protected",
+                password = "grant-pass-1234"
+            });
+            Assert.Equal(HttpStatusCode.Created, createResponse.StatusCode);
+            var link = await createResponse.Content.ReadFromJsonAsync<LinkResponse>();
+
+            _client.DefaultRequestHeaders.Authorization = null;
+
+            var grantResponse = await _client.PostAsJsonAsync($"/api/links/access-grant/{link!.ShortCode}", new
+            {
+                password = "grant-pass-1234"
+            });
+            grantResponse.EnsureSuccessStatusCode();
+
+            var grantPayload = await grantResponse.Content.ReadFromJsonAsync<JsonElement>();
+            var accessGrant = grantPayload.GetProperty("accessGrant").GetString();
+            Assert.False(string.IsNullOrWhiteSpace(accessGrant));
+
+            var queue = _factory.Services.GetRequiredService<InMemoryAnalyticsQueue>();
+            var before = queue.Messages.Count;
+
+            var redirectResponse = await _client.GetAsync($"/{link.ShortCode}?grant={Uri.EscapeDataString(accessGrant!)}");
+            Assert.Equal(HttpStatusCode.Redirect, redirectResponse.StatusCode);
+            Assert.Equal(before + 1, queue.Messages.Count);
         }
 
         [Fact]

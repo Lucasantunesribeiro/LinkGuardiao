@@ -56,3 +56,14 @@ export interface LinkCreateRequest {
   password?: string | null;
   expiresAt?: string | null;
 }
+
+export interface PublicLinkLookup {
+  shortCode: string;
+  title?: string | null;
+  isPasswordProtected: boolean;
+}
+
+export interface LinkAccessGrantResponse {
+  accessGrant: string;
+  expiresInSeconds: number;
+}

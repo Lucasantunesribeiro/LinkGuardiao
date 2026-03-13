@@ -12,12 +12,18 @@ namespace LinkGuardiao.Api.Controllers
     {
         private readonly ILinkService _linkService;
         private readonly IAnalyticsQueue _analyticsQueue;
+        private readonly ILinkAccessGrantService _linkAccessGrantService;
         private readonly ILogger<RedirectController> _logger;
 
-        public RedirectController(ILinkService linkService, IAnalyticsQueue analyticsQueue, ILogger<RedirectController> logger)
+        public RedirectController(
+            ILinkService linkService,
+            IAnalyticsQueue analyticsQueue,
+            ILinkAccessGrantService linkAccessGrantService,
+            ILogger<RedirectController> logger)
         {
             _linkService = linkService;
             _analyticsQueue = analyticsQueue;
+            _linkAccessGrantService = linkAccessGrantService;
             _logger = logger;
         }
 
@@ -34,6 +40,13 @@ namespace LinkGuardiao.Api.Controllers
 
             if (link.IsPasswordProtected)
             {
+                var accessGrant = Request.Query["grant"].FirstOrDefault();
+                if (!string.IsNullOrWhiteSpace(accessGrant)
+                    && _linkAccessGrantService.TryValidate(shortCode, accessGrant))
+                {
+                    return await RedirectWithAnalyticsAsync(shortCode, link);
+                }
+
                 var pwd = Request.Headers["X-Link-Password"].FirstOrDefault();
                 if (string.IsNullOrEmpty(pwd))
                     return StatusCode(StatusCodes.Status401Unauthorized, new { requiresPassword = true, shortCode });
@@ -42,6 +55,11 @@ namespace LinkGuardiao.Api.Controllers
                     return StatusCode(StatusCodes.Status401Unauthorized, new { requiresPassword = true, invalidPassword = true });
             }
 
+            return await RedirectWithAnalyticsAsync(shortCode, link);
+        }
+
+        private async Task<IActionResult> RedirectWithAnalyticsAsync(string shortCode, ShortenedLink link)
+        {
             try
             {
                 var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown";

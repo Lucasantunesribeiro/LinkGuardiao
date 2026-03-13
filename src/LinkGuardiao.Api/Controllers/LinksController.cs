@@ -14,11 +14,16 @@ namespace LinkGuardiao.Api.Controllers
     {
         private readonly ILinkService _linkService;
         private readonly IStatsService _statsService;
+        private readonly ILinkAccessGrantService _linkAccessGrantService;
 
-        public LinksController(ILinkService linkService, IStatsService statsService)
+        public LinksController(
+            ILinkService linkService,
+            IStatsService statsService,
+            ILinkAccessGrantService linkAccessGrantService)
         {
             _linkService = linkService;
             _statsService = statsService;
+            _linkAccessGrantService = linkAccessGrantService;
         }
 
         [HttpGet]
@@ -60,7 +65,12 @@ namespace LinkGuardiao.Api.Controllers
             if (link == null)
                 return NotFound();
 
-            return Ok(link);
+            return Ok(new PublicLinkLookupDto
+            {
+                ShortCode = link.ShortCode,
+                Title = link.Title,
+                IsPasswordProtected = link.IsPasswordProtected
+            });
         }
         [HttpPost]
         [Authorize]
@@ -177,22 +187,25 @@ namespace LinkGuardiao.Api.Controllers
             }
         }
 
-        [HttpPost("verify-password/{shortCode}")]
+        [HttpPost("access-grant/{shortCode}")]
         [AllowAnonymous]
         [EnableRateLimiting("auth")]
-        public async Task<IActionResult> VerifyPassword(string shortCode, [FromBody] string password)
+        public async Task<IActionResult> CreateAccessGrant(string shortCode, [FromBody] LinkPasswordRequest request)
         {
-            if (string.IsNullOrWhiteSpace(password))
+            if (string.IsNullOrWhiteSpace(request.Password))
             {
                 return BadRequest(new { message = "Password is required." });
             }
 
-            var isValid = await _linkService.VerifyLinkPasswordAsync(shortCode, password);
-
+            var isValid = await _linkService.VerifyLinkPasswordAsync(shortCode, request.Password);
             if (!isValid)
                 return Unauthorized();
 
-            return Ok();
+            return Ok(new LinkAccessGrantResponse
+            {
+                AccessGrant = _linkAccessGrantService.Generate(shortCode),
+                ExpiresInSeconds = 60
+            });
         }
 
         private string? GetUserId()
@@ -201,4 +214,6 @@ namespace LinkGuardiao.Api.Controllers
             return string.IsNullOrWhiteSpace(userIdClaim) ? null : userIdClaim;
         }
     }
+
+    public sealed record LinkPasswordRequest(string Password);
 }

@@ -329,6 +329,7 @@ namespace LinkGuardiao.Api
             services.AddScoped<IStatsService, StatsService>();
             services.AddSingleton<IPasswordHasher, Pbkdf2PasswordHasher>();
             services.AddScoped<IJwtTokenService, JwtTokenService>();
+            services.AddSingleton<ILinkAccessGrantService, LinkAccessGrantService>();
         }
 
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env)

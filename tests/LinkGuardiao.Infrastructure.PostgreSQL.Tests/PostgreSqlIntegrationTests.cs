@@ -1,5 +1,6 @@
 using LinkGuardiao.Application.Entities;
 using LinkGuardiao.Application.Exceptions;
+using LinkGuardiao.Application.Security;
 using LinkGuardiao.Infrastructure.PostgreSQL.Repositories;
 using Xunit;
 
@@ -93,6 +94,35 @@ namespace LinkGuardiao.Infrastructure.PostgreSQL.Tests
             Assert.True((await repository.GetByTokenHashAsync("hash-1"))!.IsRevoked);
             Assert.True((await repository.GetByTokenHashAsync("hash-2"))!.IsRevoked);
             Assert.False((await repository.GetByTokenHashAsync("hash-3"))!.IsRevoked);
+        }
+    
+        [SkippableFact]
+        public async Task EfLinkRepository_TryCreateAsync_PersistsUrlAtValidationLimit()
+        {
+            Skip.IfNot(_fixture.IsAvailable, _fixture.SkipReason);
+            await _fixture.ResetDatabaseAsync();
+
+            var prefix = "https://example.com/";
+            var url = prefix + new string('a', UrlSafety.MaxUrlLength - prefix.Length);
+            Assert.True(UrlSafety.TryNormalize(url, out var normalized, out _));
+
+            await using (var db = _fixture.CreateDbContext())
+            {
+                var repository = new EfLinkRepository(db);
+                Assert.True(await repository.TryCreateAsync(new ShortenedLink
+                {
+                    Id = "maxlen",
+                    ShortCode = "maxlen",
+                    UserId = "user-1",
+                    OriginalUrl = normalized,
+                    CreatedAt = DateTime.UtcNow,
+                    IsActive = true
+                }));
+            }
+
+            await using var readDb = _fixture.CreateDbContext();
+            var stored = await new EfLinkRepository(readDb).GetByShortCodeAsync("maxlen");
+            Assert.Equal(UrlSafety.MaxUrlLength, stored!.OriginalUrl.Length);
         }
     }
 }

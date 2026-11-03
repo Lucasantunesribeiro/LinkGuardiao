@@ -24,7 +24,8 @@ Centralizar a política em `Application/Security`:
 
 - `UrlSafety.TryNormalize` valida e devolve a forma canônica ASCII (`Uri.AbsoluteUri` com host em
   punycode via `Uri.IdnHost`). Rejeita: esquema diferente de http/https, userinfo, caracteres de
-  controle e `\`, porta inválida, URL > 2048 caracteres, rótulos DNS inválidos, punycode inválido, hosts
+  controle e `\`, porta inválida, URL normalizada > 2000 caracteres (tamanho da coluna
+  `OriginalUrl`; o limite antigo de 2048 deixava passar URLs que quebravam o INSERT com 500), rótulos DNS inválidos, punycode inválido, hosts
   internos (`localhost`, `*.local`, `*.internal`, `*.arpa`, rótulo único).
 - Hosts cujo último rótulo é numérico são interpretados pelo algoritmo IPv4 do WHATWG URL Standard
   (`IpAddressPolicy.TryParseWhatwgIpv4`), o mesmo dos navegadores, para que a decisão bata com o IP que o

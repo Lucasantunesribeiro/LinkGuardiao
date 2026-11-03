@@ -1,4 +1,5 @@
 using System.ComponentModel.DataAnnotations;
+using LinkGuardiao.Application.Security;
 
 namespace LinkGuardiao.Application.DTOs
 {
@@ -6,7 +7,7 @@ namespace LinkGuardiao.Application.DTOs
     {
         [Required]
         [Url]
-        [MaxLength(2048)]
+        [MaxLength(UrlSafety.MaxUrlLength)]
         public string OriginalUrl { get; set; } = string.Empty;
         
         [MaxLength(100)]

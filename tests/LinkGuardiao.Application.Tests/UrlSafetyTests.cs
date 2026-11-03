@@ -89,6 +89,32 @@ namespace LinkGuardiao.Application.Tests
             Assert.Equal(UrlSafety.MaxUrlLength, normalized.Length);
         }
 
+        [Fact]
+        public void MaxUrlLength_FitsPersistedColumn()
+        {
+            // ShortenedLink.OriginalUrl e varchar(2000) no PostgreSQL. Um limite de validacao maior
+            // deixava passar URLs que estouravam no INSERT (HTTP 500).
+            var column = typeof(LinkGuardiao.Application.Entities.ShortenedLink)
+                .GetProperty(nameof(LinkGuardiao.Application.Entities.ShortenedLink.OriginalUrl))!
+                .GetCustomAttributes(typeof(System.ComponentModel.DataAnnotations.MaxLengthAttribute), false)
+                .Cast<System.ComponentModel.DataAnnotations.MaxLengthAttribute>()
+                .Single();
+
+            Assert.True(UrlSafety.MaxUrlLength <= column.Length,
+                $"MaxUrlLength={UrlSafety.MaxUrlLength} > coluna={column.Length}");
+        }
+
+        [Fact]
+        public void TryNormalize_RejectsWhenEscapingPushesUrlOverLimit()
+        {
+            // 'ä' vira '%C3%A4' (6 chars): a entrada cabe no limite, a forma persistida nao.
+            var prefix = "https://example.com/";
+            var url = prefix + new string('\u00e4', (UrlSafety.MaxUrlLength - prefix.Length) / 2);
+            Assert.True(url.Length <= UrlSafety.MaxUrlLength);
+            Assert.False(UrlSafety.TryNormalize(url, out _, out var reason));
+            Assert.Equal(UrlRejectionReason.TooLong, reason);
+        }
+
         [Theory]
         [InlineData(null)]
         [InlineData("")]
@@ -268,6 +294,25 @@ namespace LinkGuardiao.Application.Tests
         public void TryParseWhatwgIpv4_RejectsInvalidForms(string host)
         {
             Assert.False(IpAddressPolicy.TryParseWhatwgIpv4(host, out _));
+        }
+
+        [Theory]
+        [InlineData("example.99999999999z", false)]
+        [InlineData("99999999999z", false)]
+        [InlineData("example.0xz", false)]
+        [InlineData("example.99999999999", true)]
+        [InlineData("example.0x1", true)]
+        [InlineData("127.0.0.1.", true)]
+        public void EndsInNumber_ValidatesEveryDigitEvenAfterOverflow(string host, bool expected)
+        {
+            Assert.Equal(expected, IpAddressPolicy.EndsInNumber(host));
+        }
+
+        [Fact]
+        public void TryNormalize_TreatsOverflowedNonNumericLabelAsDnsName()
+        {
+            Assert.True(UrlSafety.TryNormalize("https://example.99999999999z/", out var normalized, out var reason), reason.ToString());
+            Assert.Equal("https://example.99999999999z/", normalized);
         }
 
         [Fact]

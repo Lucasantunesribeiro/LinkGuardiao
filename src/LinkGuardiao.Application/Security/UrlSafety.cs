@@ -28,7 +28,11 @@ namespace LinkGuardiao.Application.Security
     /// </summary>
     public static class UrlSafety
     {
-        public const int MaxUrlLength = 2048;
+        /// <summary>
+        /// Limite da URL normalizada. Igual ao [MaxLength(2000)] de ShortenedLink.OriginalUrl
+        /// (coluna varchar(2000) no PostgreSQL): acima disso o INSERT falhava com 500.
+        /// </summary>
+        public const int MaxUrlLength = 2000;
         private const int MaxHostLength = 253;
         private const int MaxLabelLength = 63;
 

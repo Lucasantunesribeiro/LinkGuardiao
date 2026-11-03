@@ -225,13 +225,9 @@ namespace LinkGuardiao.Application.Security
                 }
 
                 var digit = (ulong)int.Parse(c.ToString(), NumberStyles.HexNumber, CultureInfo.InvariantCulture);
-                value = value * (ulong)radix + digit;
-                if (value > uint.MaxValue)
-                {
-                    // Qualquer valor acima de 32 bits ja e invalido para IPv4.
-                    value = (ulong)uint.MaxValue + 1;
-                    return true;
-                }
+                // Satura acima de 32 bits (ja invalido para IPv4) sem abortar: os digitos
+                // restantes ainda precisam ser validados (ex.: "99999999999z" nao e numero).
+                value = Math.Min(value * (ulong)radix + digit, (ulong)uint.MaxValue + 1);
             }
 
             return true;

@@ -7,11 +7,20 @@ on:
 
 permissions:
   contents: read
-  deployments: write
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  # Em PR cancela execucoes antigas; em main nao interrompe o deploy do Pages em andamento.
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
   build-test:
     runs-on: ubuntu-latest
+    timeout-minutes: 30
+    permissions:
+      contents: read
+      # Necessario apenas para o passo "Deploy to Cloudflare Pages", que so roda em push na main.
+      deployments: write
     env:
       RUN_POSTGRESQL_TESTCONTAINERS: true
 
@@ -23,6 +32,13 @@ jobs:
         uses: actions/setup-dotnet@v4
         with:
           dotnet-version: '8.0.x'
+
+      - name: Cache NuGet
+        uses: actions/cache@v4
+        with:
+          path: ~/.nuget/packages
+          key: nuget-${{ runner.os }}-${{ hashFiles('Directory.Packages.props', '**/*.csproj') }}
+          restore-keys: nuget-${{ runner.os }}-
 
       - name: Setup Node
         uses: actions/setup-node@v4

@@ -33,6 +33,12 @@ namespace LinkGuardiao.Api.Controllers
         [EnableRateLimiting("redirect")]
         public async Task<IActionResult> RedirectToOriginal(string shortCode)
         {
+            if (!ShortCodePolicy.IsWellFormed(shortCode))
+            {
+                LinkGuardiaoMetrics.RecordRedirectBlocked("not_found");
+                return NotFound(new { message = "Link nao encontrado ou expirado" });
+            }
+
             var link = await _linkService.GetLinkByShortCodeAsync(shortCode);
             if (link == null)
             {
@@ -69,6 +75,16 @@ namespace LinkGuardiao.Api.Controllers
 
         private async Task<IActionResult> RedirectWithAnalyticsAsync(string shortCode, ShortenedLink link)
         {
+            // Revalida o destino persistido (links antigos podem ter sido gravados com regras mais
+            // fracas) e usa a forma canonica ASCII: o header Location nunca recebe CR/LF, Unicode
+            // cru ou host interno.
+            if (!UrlSafety.TryNormalize(link.OriginalUrl, out var safeUrl, out _))
+            {
+                _logger.LogWarning("Blocked unsafe redirect for {ShortCode}", shortCode);
+                LinkGuardiaoMetrics.RecordRedirectBlocked("unsafe_url");
+                return StatusCode(StatusCodes.Status410Gone, new { message = "Link invalido" });
+            }
+
             try
             {
                 var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown";
@@ -111,15 +127,8 @@ namespace LinkGuardiao.Api.Controllers
                 _logger.LogWarning(ex, "Failed to enqueue analytics for {ShortCode}", shortCode);
             }
 
-            if (!UrlSafety.IsSafeHttpUrl(link.OriginalUrl, out var safeUri))
-            {
-                _logger.LogWarning("Blocked unsafe redirect for {ShortCode}", shortCode);
-                LinkGuardiaoMetrics.RecordRedirectBlocked("unsafe_url");
-                return StatusCode(StatusCodes.Status410Gone, new { message = "Link invalido" });
-            }
-
             LinkGuardiaoMetrics.RecordRedirectServed(link.IsPasswordProtected);
-            return Redirect(safeUri!.ToString());
+            return Redirect(safeUrl);
         }
 
         [HttpGet("/{shortCode:length(6)}")]

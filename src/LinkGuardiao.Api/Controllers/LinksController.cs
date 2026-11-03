@@ -1,6 +1,7 @@
 using LinkGuardiao.Application.DTOs;
 using LinkGuardiao.Application.Entities;
 using LinkGuardiao.Application.Interfaces;
+using LinkGuardiao.Application.Security;
 using LinkGuardiao.Application.Telemetry;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -62,6 +63,9 @@ namespace LinkGuardiao.Api.Controllers
         [AllowAnonymous]
         public async Task<IActionResult> GetLinkByShortCode(string shortCode)
         {
+            if (!ShortCodePolicy.IsWellFormed(shortCode))
+                return NotFound();
+
             var link = await _linkService.GetLinkByShortCodeAsync(shortCode);
             if (link == null)
                 return NotFound();
@@ -193,6 +197,9 @@ namespace LinkGuardiao.Api.Controllers
         [EnableRateLimiting("auth")]
         public async Task<IActionResult> CreateAccessGrant(string shortCode, [FromBody] LinkPasswordRequest request)
         {
+            if (!ShortCodePolicy.IsWellFormed(shortCode))
+                return NotFound();
+
             if (string.IsNullOrWhiteSpace(request.Password))
             {
                 return BadRequest(new { message = "Password is required." });

@@ -3,14 +3,16 @@ import { useParams } from 'react-router-dom';
 import { API_ROOT, API_BASE_URL } from '../lib/config';
 import { LinkAccessGrantResponse, PublicLinkLookup } from '../lib/api/types';
 import { redirectToUrl } from '../lib/navigation';
+import { isWellFormedShortCode } from '../lib/shortCode';
 
 const redirectToResolvedLink = (shortCode: string, accessGrant?: string) => {
   const grantQuery = accessGrant ? `?grant=${encodeURIComponent(accessGrant)}` : '';
-  redirectToUrl(`${API_ROOT}/r/${shortCode}${grantQuery}`);
+  redirectToUrl(`${API_ROOT}/r/${encodeURIComponent(shortCode)}${grantQuery}`);
 };
 
 const RedirectPage = () => {
-  const { shortCode } = useParams();
+  const { shortCode: rawShortCode } = useParams();
+  const shortCode = isWellFormedShortCode(rawShortCode) ? rawShortCode : undefined;
   const [loading, setLoading] = useState(true);
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
@@ -21,7 +23,7 @@ const RedirectPage = () => {
 
     const abortController = new AbortController();
 
-    fetch(`${API_BASE_URL}/links/code/${shortCode}`, { signal: abortController.signal })
+    fetch(`${API_BASE_URL}/links/code/${encodeURIComponent(shortCode)}`, { signal: abortController.signal })
       .then(res => {
         if (!res.ok) {
           redirectToResolvedLink(shortCode);
@@ -56,7 +58,7 @@ const RedirectPage = () => {
     setError('');
 
     try {
-      const res = await fetch(`${API_BASE_URL}/links/access-grant/${shortCode}`, {
+      const res = await fetch(`${API_BASE_URL}/links/access-grant/${encodeURIComponent(shortCode)}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ password }),
@@ -76,6 +78,14 @@ const RedirectPage = () => {
       setVerifying(false);
     }
   };
+
+  if (!shortCode) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <p className="text-stone-600">Link inválido.</p>
+      </div>
+    );
+  }
 
   if (loading) {
     return (

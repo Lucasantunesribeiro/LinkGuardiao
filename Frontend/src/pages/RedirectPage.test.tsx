@@ -118,4 +118,14 @@ describe('RedirectPage', () => {
     expect(await screen.findByText('Senha incorreta. Tente novamente.')).toBeInTheDocument();
     expect(redirectToUrl).not.toHaveBeenCalled();
   });
+  it.each(['..%2Fapi%2Fusers%2Fme', 'abc%24123', '%2F%2Fevil.com', 'a'.repeat(33)])(
+    'does not call the API nor redirect for a malformed short code (%s)',
+    async (shortCode) => {
+      renderRedirectPage(shortCode);
+
+      expect(await screen.findByText('Link inválido.')).toBeInTheDocument();
+      expect(fetchMock).not.toHaveBeenCalled();
+      expect(redirectToUrl).not.toHaveBeenCalled();
+    }
+  );
 });

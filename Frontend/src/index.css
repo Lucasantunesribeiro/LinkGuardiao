@@ -23,6 +23,21 @@ body {
   h1, h2, h3, h4 {
     @apply font-display tracking-tight text-ink;
   }
+
+  /* Foco visivel e consistente para teclado (WCAG 2.4.7). */
+  :focus-visible {
+    outline: 2px solid rgb(var(--sea-strong));
+    outline-offset: 2px;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+      scroll-behavior: auto !important;
+    }
+  }
 }
 
 @layer components {
@@ -79,7 +94,7 @@ body {
   }
 
   .btn-ghost {
-    @apply btn bg-white/60 text-ink hover:bg-white focus:outline-none focus:ring-2 focus:ring-[color:rgb(var(--line))];
+    @apply btn bg-white/60 text-ink hover:bg-white focus:outline-none focus-visible:ring-2 focus-visible:ring-[color:rgb(var(--sea))];
   }
 
   .btn-outline {
@@ -91,7 +106,7 @@ body {
   }
 
   .error-message {
-    @apply text-xs text-[#c14c32];
+    @apply text-xs text-[#a63d26];
   }
 
   .success-message {

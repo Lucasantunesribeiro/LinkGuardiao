@@ -9,7 +9,7 @@ const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
 
   return (
-    <nav className="navbar">
+    <nav className="navbar" aria-label="Principal">
       <div className="navbar-content">
         <Link to="/" className="flex items-center gap-3">
           <span className="flex h-10 w-10 items-center justify-center rounded-2xl bg-[color:rgb(var(--sea))] text-white shadow-soft-xl">
@@ -17,7 +17,7 @@ const Navbar = () => {
           </span>
           <div className="leading-tight">
             <p className="text-lg font-display">LinkGuardiao</p>
-            <p className="text-xs text-stone-500">Encurte com controle</p>
+            <p className="text-xs text-stone-600">Encurte com controle</p>
           </div>
         </Link>
 
@@ -49,7 +49,7 @@ const Navbar = () => {
                   {user?.username?.slice(0, 1).toUpperCase()}
                 </span>
                 <span className="text-sm text-stone-700">Oi, {user?.username}</span>
-                <button onClick={signOut} className="text-stone-500 hover:text-ink transition" aria-label="Sair">
+                <button onClick={signOut} className="text-stone-600 hover:text-ink transition" aria-label="Sair">
                   <FiLogOut />
                 </button>
               </div>
@@ -70,14 +70,16 @@ const Navbar = () => {
         <button
           className="md:hidden btn-ghost"
           onClick={() => setIsOpen(!isOpen)}
-          aria-label="Abrir menu"
+          aria-label={isOpen ? 'Fechar menu' : 'Abrir menu'}
+          aria-expanded={isOpen}
+          aria-controls="menu-mobile"
         >
           {isOpen ? <FiX /> : <FiMenu />}
         </button>
       </div>
 
       {isOpen && (
-        <div className="md:hidden border-t border-white/70 bg-white/90 backdrop-blur">
+        <div id="menu-mobile" className="md:hidden border-t border-white/70 bg-white/90 backdrop-blur">
           <div className="app-container py-4 flex flex-col gap-3">
             <Link to="/" className="flex items-center gap-2 text-sm text-stone-700" onClick={() => setIsOpen(false)}>
               <FiHome />

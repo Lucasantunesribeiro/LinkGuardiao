@@ -118,17 +118,17 @@ const LinkStatsPage = () => {
 
       <div className="grid gap-4 md:grid-cols-3">
         <div className="stat-card">
-          <p className="text-xs uppercase text-stone-400">URL Original</p>
+          <p className="text-xs uppercase text-stone-600">URL Original</p>
           <p className="text-sm text-stone-700 break-all mt-2">{stats.originalUrl}</p>
         </div>
         <div className="stat-card">
-          <p className="text-xs uppercase text-stone-400">URL Encurtada</p>
+          <p className="text-xs uppercase text-stone-600">URL Encurtada</p>
           <a href={shortUrl} className="text-sm text-[color:rgb(var(--sea))] break-all mt-2 block" target="_blank" rel="noreferrer">
             {shortUrl}
           </a>
         </div>
         <div className="stat-card">
-          <p className="text-xs uppercase text-stone-400">Total de Cliques</p>
+          <p className="text-xs uppercase text-stone-600">Total de Cliques</p>
           <p className="text-3xl font-display mt-2">{stats.totalClicks}</p>
         </div>
       </div>
@@ -143,7 +143,7 @@ const LinkStatsPage = () => {
           {stats.browserStats.length > 0 ? (
             <Doughnut data={browserStatsData} />
           ) : (
-            <p className="text-sm text-stone-500">Sem dados para exibir.</p>
+            <p className="text-sm text-stone-600">Sem dados para exibir.</p>
           )}
         </div>
       </div>
@@ -160,7 +160,7 @@ const LinkStatsPage = () => {
             ))}
           </ul>
         ) : (
-          <p className="text-sm text-stone-500">Sem dados para exibir.</p>
+          <p className="text-sm text-stone-600">Sem dados para exibir.</p>
         )}
       </div>
     </div>

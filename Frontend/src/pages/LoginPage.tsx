@@ -46,7 +46,7 @@ const LoginPage = () => {
         <p className="text-stone-600">
           Centralize campanhas, proteja acessos e acompanhe resultados com visão estratégica.
         </p>
-        <div className="grid gap-3 text-sm text-stone-500">
+        <div className="grid gap-3 text-sm text-stone-600">
           <div className="panel px-4 py-3">Controle de expiração e senha</div>
           <div className="panel px-4 py-3">Insights diarios de performance</div>
         </div>
@@ -55,7 +55,7 @@ const LoginPage = () => {
       <div className="panel p-8 shadow-soft-xl">
         <div className="space-y-2">
           <h2 className="text-2xl font-display">Entrar</h2>
-          <p className="text-sm text-stone-500">
+          <p className="text-sm text-stone-600">
             Ou{' '}
             <Link to="/register" className="link font-medium">
               crie sua conta gratuita
@@ -87,6 +87,7 @@ const LoginPage = () => {
               icon={FiLock}
               rightIcon={showPassword ? FiEyeOff : FiEye}
               onRightIconClick={() => setShowPassword(!showPassword)}
+              rightIconLabel={showPassword ? 'Ocultar senha' : 'Mostrar senha'}
               placeholder="Sua senha segura"
               value={password}
               onChange={(e) => setPassword(e.target.value)}

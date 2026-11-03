@@ -29,13 +29,13 @@ const HomePage = () => {
             </div>
             <div className="grid gap-4">
               <div className="stat-card space-y-2">
-                <p className="text-xs uppercase text-stone-400">O que fazer agora</p>
+                <p className="text-xs uppercase text-stone-600">O que fazer agora</p>
                 <p className="text-sm text-stone-600">
                   Crie um novo link, defina senha e acompanhe os acessos assim que publicar.
                 </p>
               </div>
               <div className="stat-card space-y-2">
-                <p className="text-xs uppercase text-stone-400">Visão rápida</p>
+                <p className="text-xs uppercase text-stone-600">Visão rápida</p>
                 <p className="text-sm text-stone-600">
                   Acompanhe cliques por data, origem e navegador direto no dashboard.
                 </p>
@@ -63,7 +63,7 @@ const HomePage = () => {
                   Ver meu painel
                 </Button>
               </div>
-              <div className="flex flex-wrap gap-4 text-sm text-stone-500">
+              <div className="flex flex-wrap gap-4 text-sm text-stone-600">
                 <span className="badge">Sem cartão</span>
                 <span className="badge">Controle total</span>
                 <span className="badge">Dados em tempo real</span>
@@ -71,24 +71,24 @@ const HomePage = () => {
             </div>
             <div className="panel p-6 space-y-4 animate-rise">
               <div className="flex items-center justify-between">
-                <span className="text-xs uppercase text-stone-400">Como funciona</span>
-                <span className="text-xs text-stone-500">Em três passos</span>
+                <span className="text-xs uppercase text-stone-600">Como funciona</span>
+                <span className="text-xs text-stone-600">Em três passos</span>
               </div>
               <div className="rounded-2xl border border-[color:rgb(var(--line))] bg-white px-4 py-3">
-                <p className="text-xs text-stone-400">1. Encurte</p>
+                <p className="text-xs text-stone-600">1. Encurte</p>
                 <div className="flex items-center justify-between mt-1">
                   <p className="font-semibold">Crie um link curto em segundos</p>
                   <FiArrowUpRight className="text-[color:rgb(var(--sea))]" />
                 </div>
               </div>
               <div className="rounded-2xl border border-[color:rgb(var(--line))] bg-white px-4 py-3">
-                <p className="text-xs text-stone-400">2. Proteja</p>
+                <p className="text-xs text-stone-600">2. Proteja</p>
                 <p className="text-sm text-stone-600 mt-1">
                   Adicione senha e expiração para controlar quem acessa.
                 </p>
               </div>
               <div className="rounded-2xl border border-[color:rgb(var(--line))] bg-white px-4 py-3">
-                <p className="text-xs text-stone-400">3. Analise</p>
+                <p className="text-xs text-stone-600">3. Analise</p>
                 <p className="text-sm text-stone-600 mt-1">
                   Veja cliques por data, navegador e origem no dashboard.
                 </p>

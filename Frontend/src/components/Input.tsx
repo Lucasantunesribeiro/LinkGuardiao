@@ -7,10 +7,13 @@ interface InputProps extends React.InputHTMLAttributes<HTMLInputElement> {
   icon?: IconType;
   rightIcon?: IconType;
   onRightIconClick?: () => void;
+  /** Rotulo acessivel do botao do icone direito (ex.: "Mostrar senha"). */
+  rightIconLabel?: string;
 }
 
 const Input = forwardRef<HTMLInputElement, InputProps>(
-  ({ label, error, icon: Icon, rightIcon: RightIcon, onRightIconClick, className = '', ...props }, ref) => {
+  ({ label, error, icon: Icon, rightIcon: RightIcon, onRightIconClick, rightIconLabel, className = '', ...props }, ref) => {
+    const errorId = error && props.id ? `${props.id}-error` : undefined;
     return (
       <div className="form-group">
         {label && (
@@ -22,7 +25,7 @@ const Input = forwardRef<HTMLInputElement, InputProps>(
         <div className="relative">
           {Icon && (
             <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-              <Icon className="h-5 w-5 text-stone-400" />
+              <Icon aria-hidden="true" className="h-5 w-5 text-stone-500" />
             </div>
           )}
 
@@ -35,24 +38,29 @@ const Input = forwardRef<HTMLInputElement, InputProps>(
               ${error ? 'border-[#c14c32] focus:ring-[#c14c32]' : ''}
               ${className}
             `}
+            aria-invalid={error ? true : undefined}
+            aria-describedby={errorId}
             {...props}
           />
 
-          {RightIcon && (
-            <div
-              className={`
-                absolute inset-y-0 right-0 pr-3 flex items-center
-                ${onRightIconClick ? 'cursor-pointer hover:text-stone-700' : 'pointer-events-none'}
-              `}
+          {RightIcon && (onRightIconClick ? (
+            <button
+              type="button"
+              className="absolute inset-y-0 right-0 flex items-center rounded-r-2xl px-3 text-stone-500 hover:text-stone-800"
               onClick={onRightIconClick}
+              aria-label={rightIconLabel}
             >
-              <RightIcon className="h-5 w-5 text-stone-400" />
+              <RightIcon aria-hidden="true" className="h-5 w-5" />
+            </button>
+          ) : (
+            <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
+              <RightIcon aria-hidden="true" className="h-5 w-5 text-stone-500" />
             </div>
-          )}
+          ))}
         </div>
 
         {error && (
-          <p className="error-message">
+          <p id={errorId} className="error-message" role="alert">
             {error}
           </p>
         )}

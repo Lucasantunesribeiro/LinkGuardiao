@@ -5,7 +5,7 @@ import { getApiErrorMessage } from '../lib/api/errors';
 import { ShortenedLink } from '../lib/api/types';
 import { API_ROOT } from '../lib/config';
 import { toast } from 'react-toastify';
-import { FiPlus, FiEdit, FiTrash2, FiExternalLink, FiBarChart2 } from 'react-icons/fi';
+import { FiPlus, FiEdit, FiTrash2, FiExternalLink, FiBarChart2, FiLink } from 'react-icons/fi';
 import { Button } from '../components/Button';
 import Loading from '../components/Loading';
 
@@ -77,12 +77,21 @@ const DashboardPage = () => {
           <Loading />
         </div>
       ) : fetchError ? (
-        <div className="panel px-4 py-4 text-sm text-[#c14c32]">
-          Erro ao carregar links. Verifique o servidor e tente novamente.
+        <div role="alert" className="panel flex flex-col gap-3 px-5 py-4 text-sm text-[#a63d26] sm:flex-row sm:items-center sm:justify-between">
+          <span>Erro ao carregar links. Verifique o servidor e tente novamente.</span>
+          <button type="button" className="btn-outline btn-sm" onClick={() => window.location.reload()}>
+            Tentar novamente
+          </button>
         </div>
       ) : links.length === 0 ? (
-        <div className="card text-center space-y-4">
-          <p className="text-stone-600">Você ainda não tem links encurtados.</p>
+        <div className="card flex flex-col items-center gap-4 py-12 text-center">
+          <span className="flex h-14 w-14 items-center justify-center rounded-2xl bg-[color:rgb(var(--sea))]/10 text-2xl text-[color:rgb(var(--sea))]" aria-hidden="true">
+            <FiLink />
+          </span>
+          <div className="space-y-1">
+            <h2 className="text-xl font-display">Nenhum link ainda</h2>
+            <p className="text-sm text-stone-600">Crie o primeiro link curto e acompanhe os cliques por aqui.</p>
+          </div>
           <Button href="/create-link" variant="secondary">
             <FiPlus />
             Criar meu primeiro link
@@ -97,23 +106,23 @@ const DashboardPage = () => {
                 <div className="space-y-2">
                   <div className="flex items-center gap-3">
                     <h3 className="text-lg font-semibold">{link.title || 'Sem título'}</h3>
-                    <span className={`badge ${link.isActive ? '' : 'opacity-60'}`}>
+                    <span className={`badge ${link.isActive ? 'border-[color:rgb(var(--sea))]/30 text-[color:rgb(var(--sea-strong))]' : 'text-stone-600'}`}>
                       {link.isActive ? 'Ativo' : 'Inativo'}
                     </span>
                   </div>
-                  <p className="text-sm text-stone-500 break-all">{link.originalUrl}</p>
+                  <p className="text-sm text-stone-600 break-all">{link.originalUrl}</p>
                   <a
                     href={shortUrl}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="inline-flex items-center gap-2 text-sm text-[color:rgb(var(--sea))] hover:text-[color:rgb(var(--sea-strong))]"
+                    className="inline-flex items-center gap-2 break-all text-sm font-medium text-[color:rgb(var(--sea-strong))] hover:underline"
                   >
                     {shortUrl}
-                    <FiExternalLink size={14} />
+                    <FiExternalLink size={14} aria-hidden="true" className="shrink-0" />
                   </a>
-                  <p className="text-xs text-stone-400">Criado em {formatDate(link.createdAt)}</p>
+                  <p className="text-xs text-stone-600">Criado em {formatDate(link.createdAt)}</p>
                 </div>
-                <div className="flex items-center gap-2">
+                <div className="flex flex-wrap items-center gap-2">
                   <Link to={`/edit-link/${link.id}`} className="btn-outline">
                     <FiEdit />
                     Editar
@@ -122,7 +131,7 @@ const DashboardPage = () => {
                     <FiBarChart2 />
                     Estatísticas
                   </Link>
-                  <button onClick={() => handleDelete(link.id)} className="btn-ghost text-[#c14c32]">
+                  <button type="button" onClick={() => handleDelete(link.id)} className="btn-ghost text-[#a63d26]" aria-label={`Excluir ${link.title || link.shortCode}`}>
                     <FiTrash2 />
                     Excluir
                   </button>

@@ -109,7 +109,7 @@ const RegisterPage = () => {
         <p className="text-stone-600">
           Crie links protegidos, controle expiração e veja tudo o que acontece com suas campanhas.
         </p>
-        <div className="grid gap-3 text-sm text-stone-500">
+        <div className="grid gap-3 text-sm text-stone-600">
           <div className="panel px-4 py-3">Dashboard com estatísticas em tempo real</div>
           <div className="panel px-4 py-3">Links com senha e expiração automática</div>
         </div>
@@ -118,7 +118,7 @@ const RegisterPage = () => {
       <div className="panel p-8 shadow-soft-xl">
         <div className="space-y-2">
           <h2 className="text-2xl font-display">Criar conta</h2>
-          <p className="text-sm text-stone-500">
+          <p className="text-sm text-stone-600">
             Ou{' '}
             <Link to="/login" className="link font-medium">
               fazer login

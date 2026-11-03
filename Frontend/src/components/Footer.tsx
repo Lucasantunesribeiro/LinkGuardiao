@@ -8,11 +8,11 @@ const Footer = () => {
           <p className="text-sm text-stone-600">
             © {new Date().getFullYear()} LinkGuardiao. Todos os direitos reservados.
           </p>
-          <p className="text-xs text-stone-400 mt-1">
+          <p className="text-xs text-stone-600 mt-1">
             Controle inteligente para links sensíveis e campanhas.
           </p>
         </div>
-        <div className="flex items-center gap-3 text-sm text-stone-500">
+        <div className="flex items-center gap-3 text-sm text-stone-600">
           <a
             href="https://github.com/Lucasantunesribeiro/LinkGuardiao"
             target="_blank"

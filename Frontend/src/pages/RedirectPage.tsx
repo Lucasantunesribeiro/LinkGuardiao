@@ -103,7 +103,7 @@ const RedirectPage = () => {
       <div className="w-full max-w-sm bg-white rounded-xl shadow-sm border border-stone-200 p-8 space-y-6">
         <div className="text-center">
           <h1 className="text-xl font-semibold text-stone-800">Link protegido</h1>
-          <p className="mt-1 text-sm text-stone-500">Digite a senha para acessar este link.</p>
+          <p className="mt-1 text-sm text-stone-600">Digite a senha para acessar este link.</p>
         </div>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>

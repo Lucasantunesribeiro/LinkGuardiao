@@ -16,7 +16,10 @@ const Loading: React.FC<LoadingProps> = ({ size = 'md', center = false }) => {
 
   return (
     <div className={containerClasses}>
-      <div className={`loading-spinner ${sizeClasses[size]}`} />
+      <div role="status" aria-live="polite">
+        <div className={`loading-spinner ${sizeClasses[size]}`} aria-hidden="true" />
+        <span className="sr-only">Carregando...</span>
+      </div>
     </div>
   );
 };

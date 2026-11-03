@@ -2,7 +2,10 @@
 
 ## Medidas implementadas
 - Rate limiting por IP e por endpoint (429 + Retry-After)
-- Validacao rigorosa de URL (apenas http/https)
+- Validacao de URL de destino: apenas http/https, sem userinfo, sem caracteres de controle, IDN em punycode,
+  bloqueio de hosts internos e IPs nao publicos em qualquer representacao (ver docs/adr/0001 e 0002)
+- Revalidacao do destino no redirect (link legado inseguro responde 410)
+- Codigos curtos com formato restrito e lista de reservados (docs/adr/0003)
 - CORS restrito ao dominio do Cloudflare Pages
 - JWT com issuer/audience e expiracao curta
 - Hash de senha com PBKDF2

@@ -51,16 +51,23 @@ Decisões registradas em [`docs/adr`](docs/adr).
 ### Local (dotnet + dependências no Docker)
 
 ```bash
-cp .env.example .env            # ajuste JWT__SECRET (>= 32 caracteres)
 docker compose up -d            # postgres, dynamodb-local, redis
 pwsh ./scripts/local/init-dynamodb.ps1   # cria as tabelas no DynamoDB Local
 dotnet run --project src/LinkGuardiao.Api
 ```
 
-Para usar PostgreSQL em vez de DynamoDB, defina `STORAGE_PROVIDER=postgresql` e aplique as migrations:
+`dotnet run` **não lê o arquivo `.env`** (ele é usado pelo `docker compose`). Em `Development` os valores
+locais vêm de `src/LinkGuardiao.Api/appsettings.Development.json` (tabelas do DynamoDB Local, Redis em
+`localhost:6380`, Postgres em `localhost:54329` e um `Jwt:Secret` apenas para desenvolvimento); qualquer
+variável exportada no shell sobrescreve esses valores.
+
+Para usar PostgreSQL em vez de DynamoDB, aplique as migrations e exporte `STORAGE_PROVIDER=postgresql`:
 
 ```bash
+dotnet tool install -g dotnet-ef --version 8.0.11   # se ainda nao tiver
+export POSTGRESQL_CONNECTION_STRING='Host=localhost;Port=54329;Database=linkguardiao;Username=linkguardiao;Password=linkguardiao'
 dotnet ef database update --project src/LinkGuardiao.Infrastructure.PostgreSQL --startup-project src/LinkGuardiao.Infrastructure.PostgreSQL
+STORAGE_PROVIDER=postgresql dotnet run --project src/LinkGuardiao.Api
 ```
 
 Frontend:
@@ -77,15 +84,34 @@ npm run dev                      # http://localhost:5173
 O serviço `api` fica no profile `app` e usa PostgreSQL:
 
 ```bash
-cp .env.example .env             # defina JWT__SECRET
+cp .env.example .env             # troque JWT__SECRET por um valor aleatorio (openssl rand -base64 48)
 docker compose up -d postgres redis
+export POSTGRESQL_CONNECTION_STRING='Host=localhost;Port=54329;Database=linkguardiao;Username=linkguardiao;Password=linkguardiao'
 dotnet ef database update --project src/LinkGuardiao.Infrastructure.PostgreSQL --startup-project src/LinkGuardiao.Infrastructure.PostgreSQL
 docker compose --profile app up -d --build
-curl http://localhost:5000/health/live
+curl http://localhost:5000/health
 ```
 
 A imagem (`src/LinkGuardiao.Api/Dockerfile`) é para desenvolvimento local; o deploy de produção é Lambda.
-A API não aplica migrations sozinha.
+A API não aplica migrations sozinha. Sem `JWT__SECRET` a API não sobe (falha na inicialização).
+No compose a API roda com `ASPNETCORE_ENVIRONMENT=Development`; por isso as conexões são passadas como
+`ConnectionStrings__PostgreSQL` / `ConnectionStrings__Redis`, que têm precedência sobre o
+`appsettings.Development.json` (que aponta para `localhost`).
+
+## Deploy gratuito (demo)
+
+A API Lambda da demo antiga responde `403 This account is suspended` (conta AWS suspensa). Caminho sem custo:
+
+1. **Banco**: crie um projeto free no [Neon](https://neon.tech) e copie a connection string no formato Npgsql
+   (`Host=...;Database=...;Username=...;Password=...;SSL Mode=Require`).
+2. **API**: no [Render](https://render.com), *New > Blueprint* apontando para este repositório (usa `render.yaml`,
+   plano free, Docker). Informe `ConnectionStrings__PostgreSQL` e `CORS_ALLOWED_ORIGIN`; `JWT__SECRET` é gerado.
+   As migrations rodam na subida (`POSTGRESQL_AUTO_MIGRATE=true`) e os cliques são gravados direto no PostgreSQL.
+3. **Frontend**: Cloudflare Pages (já publicado pelo CI em push na `main`). Atualize o secret `VITE_API_BASE_URL`
+   do GitHub para a URL do Render e faça um novo push na `main`.
+
+Limitações do plano free: o Render hiberna a API após inatividade (primeira requisição lenta).
+O deploy AWS (`deploy.yml`) é apenas manual (`workflow_dispatch`).
 
 ## Variáveis de ambiente (backend)
 
@@ -96,14 +122,16 @@ A API não aplica migrations sozinha.
 | `JWT__ACCESSTOKENMINUTES` | não | Validade do access token (5–120) |
 | `CORS_ALLOWED_ORIGIN` | fora de Development | Origem permitida (ex.: domínio do Pages) |
 | `STORAGE_PROVIDER` | não | `dynamodb` (padrão) ou `postgresql` |
-| `POSTGRESQL_CONNECTION_STRING` | se `postgresql` | Connection string Npgsql |
+| `POSTGRESQL_CONNECTION_STRING` | se `postgresql` | Connection string Npgsql. `ConnectionStrings__PostgreSQL` tem precedência (e o `appsettings.Development.json` define uma) |
 | `AWS_REGION` | DynamoDB/SQS | Região AWS |
 | `DDB_TABLE_LINKS`, `DDB_TABLE_USERS`, `DDB_TABLE_ACCESS`, `DDB_TABLE_DAILY_LIMITS`, `DDB_TABLE_REFRESH_TOKENS`, `DDB_TABLE_EMAIL_LOCKS` | DynamoDB | Nomes das tabelas |
 | `DDB_SERVICE_URL` | não | Endpoint do DynamoDB Local (ex.: `http://localhost:8000`) |
 | `SQS_ANALYTICS_QUEUE_URL` | não | Se vazio, os cliques não são enfileirados (`NoOpAnalyticsQueue`) |
-| `REDIS_CONNECTION_STRING` | não | Habilita cache distribuído de leitura |
+| `REDIS_CONNECTION_STRING` | não | Habilita cache distribuído de leitura. `ConnectionStrings__Redis` tem precedência |
 | `LINKLIMITS__DAILYUSERCREATELIMIT` | não | Limite diário de criação de links por usuário (padrão 100) |
 | `POSTGRES_PASSWORD` | não | Senha do Postgres local do `docker compose` |
+| `POSTGRESQL_AUTO_MIGRATE` | não | `true` aplica as migrations na inicialização (modo `postgresql`) |
+| `TRUST_FORWARDED_HEADERS` | não | `true` aceita `X-Forwarded-For` de qualquer proxy (PaaS como Render); não use com a API exposta direto |
 
 Frontend: `VITE_API_BASE_URL` (URL base da API, sem `/api`).
 
@@ -114,7 +142,8 @@ criação/edição (validador + serviço) e de novo no momento do redirect:
 
 - Apenas `http`/`https`; `javascript:`, `data:`, `file:`, `ftp:`, `gopher:` etc. são rejeitados.
 - Sem credenciais na URL (`user@host`, `https://confiavel.com@malicioso.com`).
-- Sem caracteres de controle (CR/LF/TAB/NUL) nem `\`; máximo de 2048 caracteres.
+- Sem caracteres de controle (CR/LF/TAB/NUL) nem `\`; máximo de 2000 caracteres **após** a normalização
+  (mesmo tamanho da coluna `OriginalUrl` no PostgreSQL).
 - Host IDN convertido para punycode; a URL é persistida e enviada no `Location` em forma ASCII canônica.
 - Hosts internos rejeitados: `localhost`, `*.localhost`, `*.local`, `*.localdomain`, `*.internal`, `*.home.arpa`, `*.arpa` e nomes de rótulo único.
 - IPs não públicos rejeitados (loopback, RFC 1918, 169.254/16 incl. metadata, 100.64/10, 0/8, multicast,
@@ -159,5 +188,6 @@ Frontend: [`docs/DEPLOY_CLOUDFLARE_PAGES.md`](docs/DEPLOY_CLOUDFLARE_PAGES.md). 
 - Não há checagem de reputação/malware dos destinos nem bloqueio de homógrafos (o host é apenas normalizado para punycode).
 - Não há aliases personalizados: os códigos são sempre aleatórios.
 - A API não aplica migrations do PostgreSQL automaticamente.
-- O build Docker não foi validado de ponta a ponta neste ambiente (restore NuGet indisponível dentro do container de build); o estágio de runtime foi validado com um publish local.
+- O `Dockerfile` da API não é usado no deploy (produção é Lambda) e não há imagem do frontend.
+- `appsettings.Development.json` contém um `Jwt:Secret` fixo de desenvolvimento; ele só é carregado com `ASPNETCORE_ENVIRONMENT=Development`.
 - A validação de IDN depende de ICU (`InvariantGlobalization=false`).

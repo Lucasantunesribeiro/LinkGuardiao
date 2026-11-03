@@ -63,7 +63,7 @@ const DashboardPage = () => {
           <span className="badge">Seu acervo</span>
           <h1 className="page-title">Meus links</h1>
           <p className="text-sm text-stone-600">
-            Gerencie, edite e acompanhe cada link com seguranca.
+            Gerencie, edite e acompanhe cada link com segurança.
           </p>
         </div>
         <Button href="/create-link" variant="secondary" size="lg">
@@ -82,7 +82,7 @@ const DashboardPage = () => {
         </div>
       ) : links.length === 0 ? (
         <div className="card text-center space-y-4">
-          <p className="text-stone-600">Voce ainda nao tem links encurtados.</p>
+          <p className="text-stone-600">Você ainda não tem links encurtados.</p>
           <Button href="/create-link" variant="secondary">
             <FiPlus />
             Criar meu primeiro link
@@ -96,7 +96,7 @@ const DashboardPage = () => {
               <div key={link.id} className="card flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
                 <div className="space-y-2">
                   <div className="flex items-center gap-3">
-                    <h3 className="text-lg font-semibold">{link.title || 'Sem titulo'}</h3>
+                    <h3 className="text-lg font-semibold">{link.title || 'Sem título'}</h3>
                     <span className={`badge ${link.isActive ? '' : 'opacity-60'}`}>
                       {link.isActive ? 'Ativo' : 'Inativo'}
                     </span>
@@ -120,7 +120,7 @@ const DashboardPage = () => {
                   </Link>
                   <Link to={`/stats/${link.id}`} className="btn-ghost">
                     <FiBarChart2 />
-                    Estatisticas
+                    Estatísticas
                   </Link>
                   <button onClick={() => handleDelete(link.id)} className="btn-ghost text-[#c14c32]">
                     <FiTrash2 />

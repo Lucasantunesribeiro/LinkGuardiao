@@ -80,7 +80,7 @@ const CreateLinkPage = () => {
         <span className="badge">Novo link</span>
         <h1 className="page-title">Crie um link protegido.</h1>
         <p className="text-stone-600">
-          Defina senha, expiracao e titulo para manter o controle total sobre cada acesso.
+          Defina senha, expiração e título para manter o controle total sobre cada acesso.
         </p>
         <div className="panel px-4 py-4 text-sm text-stone-500">
           Dica: links com senha geram acessos mais qualificados.
@@ -105,7 +105,7 @@ const CreateLinkPage = () => {
           id="title"
           name="title"
           type="text"
-          label="Titulo (opcional)"
+          label="Título (opcional)"
           icon={FiType}
           placeholder="Meu link personalizado"
           value={title}
@@ -128,7 +128,7 @@ const CreateLinkPage = () => {
           id="expiresAt"
           name="expiresAt"
           type="datetime-local"
-          label="Data de expiracao (opcional)"
+          label="Data de expiração (opcional)"
           icon={FiClock}
           value={expiresAt}
           onChange={(e) => setExpiresAt(e.target.value)}

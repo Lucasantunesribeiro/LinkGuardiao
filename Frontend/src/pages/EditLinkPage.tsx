@@ -50,7 +50,7 @@ const EditLinkPage = () => {
     let isValid = true;
 
     if (!originalUrl.trim()) {
-      newErrors.originalUrl = 'A URL original e obrigatoria';
+      newErrors.originalUrl = 'A URL original é obrigatória';
       isValid = false;
     }
 
@@ -102,9 +102,9 @@ const EditLinkPage = () => {
     <div className="grid gap-10 lg:grid-cols-[1fr_1.1fr] items-start">
       <div className="space-y-4">
         <span className="badge">Editar link</span>
-        <h1 className="page-title">Ajuste detalhes e seguranca.</h1>
+        <h1 className="page-title">Ajuste detalhes e segurança.</h1>
         <p className="text-stone-600">
-          Atualize destino, titulo e controle de expiração com rapidez.
+          Atualize destino, título e controle de expiração com rapidez.
         </p>
         <div className="panel px-4 py-4 text-sm text-stone-500">
           Desative o link se precisar interromper acessos imediatamente.
@@ -128,7 +128,7 @@ const EditLinkPage = () => {
           id="title"
           name="title"
           type="text"
-          label="Titulo (opcional)"
+          label="Título (opcional)"
           icon={FiType}
           value={title}
           onChange={(e) => setTitle(e.target.value)}
@@ -149,7 +149,7 @@ const EditLinkPage = () => {
           id="expiresAt"
           name="expiresAt"
           type="datetime-local"
-          label="Data de expiracao (opcional)"
+          label="Data de expiração (opcional)"
           icon={FiClock}
           value={expiresAt}
           onChange={(e) => setExpiresAt(e.target.value)}

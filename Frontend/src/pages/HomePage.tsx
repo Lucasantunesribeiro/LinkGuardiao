@@ -16,14 +16,14 @@ const HomePage = () => {
               <span className="badge">Bem-vindo de volta</span>
               <h1 className="page-title">Tudo sob controle, {user.username}.</h1>
               <p className="text-base text-stone-600">
-                Crie links protegidos, monitore campanhas e tenha visao completa de performance sem complicacao.
+                Crie links protegidos, monitore campanhas e tenha visão completa de performance sem complicação.
               </p>
               <div className="flex flex-wrap items-center gap-3">
                 <Button href="/dashboard" variant="primary" size="lg">
                   Acessar dashboard
                 </Button>
                 <Button href="/create-link" variant="outline" size="lg">
-                  Novo link rapido
+                  Novo link rápido
                 </Button>
               </div>
             </div>
@@ -35,7 +35,7 @@ const HomePage = () => {
                 </p>
               </div>
               <div className="stat-card space-y-2">
-                <p className="text-xs uppercase text-stone-400">Visao rapida</p>
+                <p className="text-xs uppercase text-stone-400">Visão rápida</p>
                 <p className="text-sm text-stone-600">
                   Acompanhe cliques por data, origem e navegador direto no dashboard.
                 </p>
@@ -47,24 +47,24 @@ const HomePage = () => {
         <Hero>
           <div className="grid gap-10 lg:grid-cols-[1.2fr_1fr] items-center">
             <div className="space-y-6">
-              <span className="badge">Seguranca, performance e clareza</span>
+              <span className="badge">Segurança, performance e clareza</span>
               <h1 className="text-4xl md:text-6xl leading-tight">
-                Links curtos, estrategia longa. Tudo no mesmo lugar.
+                Links curtos, estratégia longa. Tudo no mesmo lugar.
               </h1>
               <p className="text-lg text-stone-600">
-                LinkGuardiao transforma URLs em ativos inteligentes com senha, expiracao e estatisticas
+                LinkGuardiao transforma URLs em ativos inteligentes com senha, expiração e estatísticas
                 que mostram o que realmente importa.
               </p>
               <div className="flex flex-wrap items-center gap-3">
                 <Button href="/register" variant="primary" size="lg">
-                  Comecar gratis
+                  Começar grátis
                 </Button>
                 <Button href="/login" variant="ghost" size="lg">
                   Ver meu painel
                 </Button>
               </div>
               <div className="flex flex-wrap gap-4 text-sm text-stone-500">
-                <span className="badge">Sem cartao</span>
+                <span className="badge">Sem cartão</span>
                 <span className="badge">Controle total</span>
                 <span className="badge">Dados em tempo real</span>
               </div>
@@ -72,7 +72,7 @@ const HomePage = () => {
             <div className="panel p-6 space-y-4 animate-rise">
               <div className="flex items-center justify-between">
                 <span className="text-xs uppercase text-stone-400">Como funciona</span>
-                <span className="text-xs text-stone-500">Em tres passos</span>
+                <span className="text-xs text-stone-500">Em três passos</span>
               </div>
               <div className="rounded-2xl border border-[color:rgb(var(--line))] bg-white px-4 py-3">
                 <p className="text-xs text-stone-400">1. Encurte</p>
@@ -84,7 +84,7 @@ const HomePage = () => {
               <div className="rounded-2xl border border-[color:rgb(var(--line))] bg-white px-4 py-3">
                 <p className="text-xs text-stone-400">2. Proteja</p>
                 <p className="text-sm text-stone-600 mt-1">
-                  Adicione senha e expiracao para controlar quem acessa.
+                  Adicione senha e expiração para controlar quem acessa.
                 </p>
               </div>
               <div className="rounded-2xl border border-[color:rgb(var(--line))] bg-white px-4 py-3">
@@ -104,28 +104,28 @@ const HomePage = () => {
           <span className="badge mx-auto">Recursos essenciais</span>
           <h2 className="section-title">O poder de decidir quem acessa e quando.</h2>
           <p className="text-stone-600 max-w-2xl mx-auto">
-            Nao e apenas um encurtador. E uma central para campanhas, acessos privados e conteudo estrategico.
+            Não é apenas um encurtador. É uma central para campanhas, acessos privados e conteúdo estratégico.
           </p>
         </div>
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
           {[
             {
               title: 'Encurtamento inteligente',
-              description: 'Reduza URLs com padrao de marca e compartilhamento rapido.',
+              description: 'Reduza URLs com padrão de marca e compartilhamento rápido.',
               icon: FiLink
             },
             {
-              title: 'Estatisticas cirurgicas',
-              description: 'Acompanhe cliques e tendencias com visao clara de impacto.',
+              title: 'Estatísticas cirúrgicas',
+              description: 'Acompanhe cliques e tendências com visão clara de impacto.',
               icon: FiBarChart2
             },
             {
-              title: 'Protecao com senha',
+              title: 'Proteção com senha',
               description: 'Garanta acesso somente a quem precisa com um clique.',
               icon: FiShield
             },
             {
-              title: 'Expiracao automatica',
+              title: 'Expiração automática',
               description: 'Defina janelas de acesso e retire links do ar no tempo certo.',
               icon: FiClock
             }
@@ -149,14 +149,14 @@ const HomePage = () => {
             <span className="badge mx-auto">Pronto para avancar?</span>
             <h2 className="section-title">Comece a proteger seus links hoje.</h2>
             <p className="text-stone-600 max-w-2xl mx-auto">
-              Crie sua conta gratuita e tenha controle total de acesso, expiracao e desempenho em minutos.
+              Crie sua conta gratuita e tenha controle total de acesso, expiração e desempenho em minutos.
             </p>
             <div className="flex flex-wrap justify-center gap-3">
               <Button href="/register" variant="secondary" size="lg">
                 Registrar gratuitamente
               </Button>
               <Button href="/login" variant="outline" size="lg">
-                Ja tenho conta
+                Já tenho conta
               </Button>
             </div>
           </div>

@@ -24,7 +24,7 @@ const Navbar = () => {
         <div className="hidden md:flex items-center gap-6">
           <Link to="/" className="flex items-center gap-2 text-sm text-stone-700 hover:text-ink transition">
             <FiHome />
-            Inicio
+            Início
           </Link>
           {isAuthenticated && (
             <Link to="/dashboard" className="flex items-center gap-2 text-sm text-stone-700 hover:text-ink transition">
@@ -81,7 +81,7 @@ const Navbar = () => {
           <div className="app-container py-4 flex flex-col gap-3">
             <Link to="/" className="flex items-center gap-2 text-sm text-stone-700" onClick={() => setIsOpen(false)}>
               <FiHome />
-              Inicio
+              Início
             </Link>
             {isAuthenticated && (
               <>

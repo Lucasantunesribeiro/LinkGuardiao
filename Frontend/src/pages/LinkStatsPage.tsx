@@ -30,7 +30,7 @@ const LinkStatsPage = () => {
         const response = await api.get<LinkStatsDto>(`/links/${id}/stats`);
         setStats(response.data);
       } catch {
-        setError('Erro ao carregar estatisticas do link');
+        setError('Erro ao carregar estatísticas do link');
       } finally {
         setLoading(false);
       }
@@ -101,7 +101,7 @@ const LinkStatsPage = () => {
   if (!stats) {
     return (
       <div className="flex justify-center items-center min-h-[60vh]">
-        <div className="text-stone-600">Link nao encontrado</div>
+        <div className="text-stone-600">Link não encontrado</div>
       </div>
     );
   }
@@ -112,7 +112,7 @@ const LinkStatsPage = () => {
     <div className="space-y-8">
       <div className="space-y-2">
         <span className="badge">Insights</span>
-        <h1 className="page-title">Estatisticas do link</h1>
+        <h1 className="page-title">Estatísticas do link</h1>
         <p className="text-sm text-stone-600">Resumo de desempenho e acessos em tempo real.</p>
       </div>
 

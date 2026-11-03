@@ -107,11 +107,11 @@ const RegisterPage = () => {
           Crie sua conta e tenha controle total dos seus links.
         </h1>
         <p className="text-stone-600">
-          Crie links protegidos, controle expiracao e veja tudo o que acontece com suas campanhas.
+          Crie links protegidos, controle expiração e veja tudo o que acontece com suas campanhas.
         </p>
         <div className="grid gap-3 text-sm text-stone-500">
-          <div className="panel px-4 py-3">Dashboard com estatisticas em tempo real</div>
-          <div className="panel px-4 py-3">Links com senha e expiração automatica</div>
+          <div className="panel px-4 py-3">Dashboard com estatísticas em tempo real</div>
+          <div className="panel px-4 py-3">Links com senha e expiração automática</div>
         </div>
       </div>
 
@@ -145,7 +145,7 @@ const RegisterPage = () => {
               type="email"
               label="Email"
               icon={FiMail}
-              placeholder="voce@empresa.com"
+              placeholder="nome@empresa.com"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               error={errors.email}
@@ -157,7 +157,7 @@ const RegisterPage = () => {
               type="password"
               label="Senha"
               icon={FiLock}
-              placeholder="Minimo de 6 caracteres"
+              placeholder="Mínimo de 6 caracteres"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               error={errors.password}

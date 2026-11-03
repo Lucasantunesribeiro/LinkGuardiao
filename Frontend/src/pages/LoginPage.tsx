@@ -44,10 +44,10 @@ const LoginPage = () => {
           Entre e continue monitorando seus links.
         </h1>
         <p className="text-stone-600">
-          Centralize campanhas, proteja acessos e acompanhe resultados com visao estrategica.
+          Centralize campanhas, proteja acessos e acompanhe resultados com visão estratégica.
         </p>
         <div className="grid gap-3 text-sm text-stone-500">
-          <div className="panel px-4 py-3">Controle de expiracao e senha</div>
+          <div className="panel px-4 py-3">Controle de expiração e senha</div>
           <div className="panel px-4 py-3">Insights diarios de performance</div>
         </div>
       </div>
@@ -71,7 +71,7 @@ const LoginPage = () => {
               type="email"
               label="Email"
               icon={FiMail}
-              placeholder="voce@empresa.com"
+              placeholder="nome@empresa.com"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required

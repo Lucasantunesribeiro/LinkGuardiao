@@ -5,7 +5,7 @@ services:
     environment:
       POSTGRES_DB: linkguardiao
       POSTGRES_USER: linkguardiao
-      POSTGRES_PASSWORD: linkguardiao
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-linkguardiao}
     ports:
       - "54329:5432"
     volumes:
@@ -33,6 +33,32 @@ services:
       - "6380:6379"
     volumes:
       - redis_data:/data
+
+  # API ASP.NET Core em container (opcional): docker compose --profile app up -d --build
+  # Usa STORAGE_PROVIDER=postgresql. Aplique as migrations antes (ver readme.md).
+  api:
+    profiles: ["app"]
+    build:
+      context: .
+      dockerfile: src/LinkGuardiao.Api/Dockerfile
+    container_name: linkguardiao-api
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+      STORAGE_PROVIDER: postgresql
+      POSTGRESQL_CONNECTION_STRING: Host=postgres;Port=5432;Database=linkguardiao;Username=linkguardiao;Password=${POSTGRES_PASSWORD:-linkguardiao}
+      REDIS_CONNECTION_STRING: redis:6379
+      JWT__SECRET: ${JWT__SECRET:-}
+      JWT__ISSUER: ${JWT__ISSUER:-LinkGuardiao}
+      JWT__AUDIENCE: ${JWT__AUDIENCE:-LinkGuardiao}
+      CORS_ALLOWED_ORIGIN: ${CORS_ALLOWED_ORIGIN:-http://localhost:5173}
+      LINKLIMITS__DAILYUSERCREATELIMIT: ${LINKLIMITS__DAILYUSERCREATELIMIT:-100}
+    ports:
+      - "5000:8080"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_started
 
 volumes:
   postgres_data:

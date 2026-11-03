@@ -45,8 +45,11 @@ services:
     environment:
       ASPNETCORE_ENVIRONMENT: Development
       STORAGE_PROVIDER: postgresql
-      POSTGRESQL_CONNECTION_STRING: Host=postgres;Port=5432;Database=linkguardiao;Username=linkguardiao;Password=${POSTGRES_PASSWORD:-linkguardiao}
-      REDIS_CONNECTION_STRING: redis:6379
+      # ConnectionStrings__* tem precedencia sobre POSTGRESQL_CONNECTION_STRING/REDIS_CONNECTION_STRING no
+      # Startup, e o appsettings.Development.json aponta para localhost; por isso sao sobrescritas aqui.
+      ConnectionStrings__PostgreSQL: Host=postgres;Port=5432;Database=linkguardiao;Username=linkguardiao;Password=${POSTGRES_PASSWORD:-linkguardiao}
+      ConnectionStrings__Redis: redis:6379
+      AWS_REGION: ${AWS_REGION:-us-east-1}
       JWT__SECRET: ${JWT__SECRET:-}
       JWT__ISSUER: ${JWT__ISSUER:-LinkGuardiao}
       JWT__AUDIENCE: ${JWT__AUDIENCE:-LinkGuardiao}

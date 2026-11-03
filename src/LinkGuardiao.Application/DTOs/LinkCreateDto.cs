@@ -6,7 +6,6 @@ namespace LinkGuardiao.Application.DTOs
     public class LinkCreateDto
     {
         [Required]
-        [Url]
         [MaxLength(UrlSafety.MaxUrlLength)]
         public string OriginalUrl { get; set; } = string.Empty;
         

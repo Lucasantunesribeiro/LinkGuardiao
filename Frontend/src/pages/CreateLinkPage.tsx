@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { api } from '../lib/api/client';
-import { getApiErrorMessage } from '../lib/api/errors';
+import { getApiErrorMessage, getApiFieldError } from '../lib/api/errors';
 import { LinkCreateRequest } from '../lib/api/types';
 import { toast } from 'react-toastify';
 import { FiLink, FiType, FiClock, FiLock } from 'react-icons/fi';
@@ -68,6 +68,10 @@ const CreateLinkPage = () => {
       toast.success('Link criado com sucesso!');
       navigate('/dashboard');
     } catch (error) {
+      const urlError = getApiFieldError(error, 'originalUrl');
+      if (urlError) {
+        setErrors(current => ({ ...current, originalUrl: urlError }));
+      }
       toast.error(getApiErrorMessage(error, 'Ocorreu um erro ao criar o link'));
     } finally {
       setIsSubmitting(false);
@@ -82,7 +86,7 @@ const CreateLinkPage = () => {
         <p className="text-stone-600">
           Defina senha, expiração e título para manter o controle total sobre cada acesso.
         </p>
-        <div className="panel px-4 py-4 text-sm text-stone-500">
+        <div className="panel px-4 py-4 text-sm text-stone-600">
           Dica: links com senha geram acessos mais qualificados.
         </div>
       </div>

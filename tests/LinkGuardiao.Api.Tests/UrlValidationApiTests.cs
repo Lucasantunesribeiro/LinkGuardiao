@@ -45,6 +45,21 @@ namespace LinkGuardiao.Api.Tests
         }
 
         [Fact]
+        public async Task CreateLink_ReturnsSpecificReasonForTheField()
+        {
+            var client = await CreateAuthenticatedClientAsync();
+
+            var response = await client.PostAsJsonAsync("/api/links", new { originalUrl = "http://169.254.169.254/" });
+
+            Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+            using var json = System.Text.Json.JsonDocument.Parse(await response.Content.ReadAsStringAsync());
+            var messages = json.RootElement.GetProperty("errors").GetProperty("OriginalUrl")
+                .EnumerateArray().Select(m => m.GetString()).ToList();
+            // Uma unica mensagem, especifica do motivo (o [Url] generico em ingles foi removido do DTO).
+            Assert.Equal(new[] { "O endereço aponta para um IP privado, de loopback ou reservado." }, messages);
+        }
+
+        [Fact]
         public async Task CreateLink_RejectsUrlLongerThanLimit()
         {
             var client = await CreateAuthenticatedClientAsync();

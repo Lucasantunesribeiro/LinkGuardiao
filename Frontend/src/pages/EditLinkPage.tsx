@@ -3,6 +3,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { api } from '../lib/api/client';
 import { ShortenedLink } from '../lib/api/types';
 import { toast } from 'react-toastify';
+import { getApiErrorMessage, getApiFieldError } from '../lib/api/errors';
 import { FiLink, FiType, FiClock, FiLock } from 'react-icons/fi';
 import Input from '../components/Input';
 import { Button } from '../components/Button';
@@ -83,8 +84,12 @@ const EditLinkPage = () => {
 
       toast.success('Link atualizado com sucesso!');
       navigate('/dashboard');
-    } catch {
-      toast.error('Erro ao atualizar link.');
+    } catch (error) {
+      const urlError = getApiFieldError(error, 'originalUrl');
+      if (urlError) {
+        setErrors(current => ({ ...current, originalUrl: urlError }));
+      }
+      toast.error(getApiErrorMessage(error, 'Erro ao atualizar link.'));
     } finally {
       setIsSubmitting(false);
     }
@@ -106,7 +111,7 @@ const EditLinkPage = () => {
         <p className="text-stone-600">
           Atualize destino, título e controle de expiração com rapidez.
         </p>
-        <div className="panel px-4 py-4 text-sm text-stone-500">
+        <div className="panel px-4 py-4 text-sm text-stone-600">
           Desative o link se precisar interromper acessos imediatamente.
         </div>
       </div>

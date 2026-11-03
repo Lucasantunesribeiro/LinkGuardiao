@@ -165,16 +165,16 @@ namespace LinkGuardiao.Application.Security
         {
             return reason switch
             {
-                UrlRejectionReason.Empty => "URL is required.",
-                UrlRejectionReason.TooLong => $"URL must have at most {MaxUrlLength} characters.",
-                UrlRejectionReason.InvalidCharacters => "URL contains invalid characters.",
-                UrlRejectionReason.SchemeNotAllowed => "Only http and https URLs are allowed.",
-                UrlRejectionReason.UserInfoNotAllowed => "URLs with embedded credentials (user@host) are not allowed.",
-                UrlRejectionReason.InvalidPort => "URL port is invalid.",
-                UrlRejectionReason.InvalidHost => "URL host is invalid.",
-                UrlRejectionReason.BlockedHost => "URL host points to a local or internal network name.",
-                UrlRejectionReason.BlockedAddress => "URL host points to a private, loopback or reserved IP address.",
-                _ => "URL must be a valid http/https address."
+                UrlRejectionReason.Empty => "Informe a URL de destino.",
+                UrlRejectionReason.TooLong => $"A URL deve ter no máximo {MaxUrlLength} caracteres.",
+                UrlRejectionReason.InvalidCharacters => "A URL contém caracteres inválidos (controle ou barra invertida).",
+                UrlRejectionReason.SchemeNotAllowed => "Apenas URLs http e https são permitidas.",
+                UrlRejectionReason.UserInfoNotAllowed => "URLs com credenciais embutidas (usuario@host) não são permitidas.",
+                UrlRejectionReason.InvalidPort => "A porta da URL é inválida.",
+                UrlRejectionReason.InvalidHost => "O domínio da URL é inválido.",
+                UrlRejectionReason.BlockedHost => "O domínio aponta para um nome de rede local ou interna.",
+                UrlRejectionReason.BlockedAddress => "O endereço aponta para um IP privado, de loopback ou reservado.",
+                _ => "Informe uma URL http/https válida."
             };
         }
 

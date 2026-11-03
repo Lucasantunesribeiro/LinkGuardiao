@@ -293,7 +293,12 @@ namespace LinkGuardiao.Api
                 options.AccessRetentionDays = dynamoOptions.AccessRetentionDays;
             });
 
-            if (!_environment.IsDevelopment())
+            var storageProvider = _configuration["STORAGE_PROVIDER"] ?? "dynamodb";
+            var usePostgreSql = storageProvider.Equals("postgresql", StringComparison.OrdinalIgnoreCase);
+
+            // Tabelas DynamoDB so sao obrigatorias quando o DynamoDB e o storage; antes a API nao
+            // subia em producao com STORAGE_PROVIDER=postgresql.
+            if (!_environment.IsDevelopment() && !usePostgreSql)
             {
                 if (string.IsNullOrWhiteSpace(dynamoOptions.LinksTableName) ||
                     string.IsNullOrWhiteSpace(dynamoOptions.UsersTableName) ||
@@ -319,8 +324,7 @@ namespace LinkGuardiao.Api
 
             services.AddSingleton<ILinkReadCache, DistributedLinkReadCache>();
 
-            var storageProvider = _configuration["STORAGE_PROVIDER"] ?? "dynamodb";
-            if (storageProvider.Equals("postgresql", StringComparison.OrdinalIgnoreCase))
+            if (usePostgreSql)
             {
                 var connectionString = _configuration.GetConnectionString("PostgreSQL")
                     ?? _configuration["POSTGRESQL_CONNECTION_STRING"]
@@ -343,6 +347,12 @@ namespace LinkGuardiao.Api
             if (!string.IsNullOrWhiteSpace(sqsQueueUrl))
             {
                 services.AddSingleton<IAnalyticsQueue, SqsAnalyticsQueue>();
+            }
+            else if (usePostgreSql)
+            {
+                // Sem SQS, grava o clique direto no PostgreSQL (o consumer Lambda nao existe nesse modo);
+                // antes os cliques eram descartados e as estatisticas ficavam sempre vazias.
+                services.AddScoped<IAnalyticsQueue, DirectAnalyticsQueue>();
             }
             else
             {
@@ -377,8 +387,16 @@ namespace LinkGuardiao.Api
             };
             forwardedHeadersOptions.KnownNetworks.Clear();
             forwardedHeadersOptions.KnownProxies.Clear();
-            forwardedHeadersOptions.KnownProxies.Add(IPAddress.Loopback);
-            forwardedHeadersOptions.KnownProxies.Add(IPAddress.IPv6Loopback);
+            if (!_configuration.GetValue<bool>("TRUST_FORWARDED_HEADERS"))
+            {
+                forwardedHeadersOptions.KnownProxies.Add(IPAddress.Loopback);
+                forwardedHeadersOptions.KnownProxies.Add(IPAddress.IPv6Loopback);
+            }
+            // Com TRUST_FORWARDED_HEADERS=true (PaaS como o Render, onde todo trafego passa pelo proxy
+            // da plataforma) qualquer proxy e aceito, mas ForwardLimit=1 usa apenas a ultima entrada de
+            // X-Forwarded-For (a que o proxy adicionou), entao o cliente nao consegue forjar o IP usado
+            // no rate limiting. Nao habilite se a API estiver exposta diretamente na internet.
+            forwardedHeadersOptions.ForwardLimit = 1;
             app.UseForwardedHeaders(forwardedHeadersOptions);
 
             app.UseMiddleware<RequestIdMiddleware>();

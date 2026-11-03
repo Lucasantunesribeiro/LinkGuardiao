@@ -69,9 +69,9 @@ namespace LinkGuardiao.Application.Services
 
         public async Task<ShortenedLink> CreateLinkAsync(LinkCreateDto linkDto, string userId)
         {
-            if (!UrlSafety.IsSafeHttpUrl(linkDto.OriginalUrl, out var safeUri))
+            if (!UrlSafety.TryNormalize(linkDto.OriginalUrl, out var normalizedUrl, out var rejection))
             {
-                throw new InvalidOperationException("Invalid URL.");
+                throw new InvalidOperationException(UrlSafety.Describe(rejection));
             }
 
             if (_limits.DailyUserCreateLimit > 0)
@@ -83,7 +83,6 @@ namespace LinkGuardiao.Application.Services
                 }
             }
 
-            var normalizedUrl = safeUri!.ToString();
             for (var attempt = 0; attempt < 10; attempt++)
             {
                 var shortCode = GenerateRandomShortCode();
@@ -123,12 +122,12 @@ namespace LinkGuardiao.Application.Services
                 return null;
             }
 
-            if (!UrlSafety.IsSafeHttpUrl(linkDto.OriginalUrl, out var safeUri))
+            if (!UrlSafety.TryNormalize(linkDto.OriginalUrl, out var normalizedUrl, out var rejection))
             {
-                throw new InvalidOperationException("Invalid URL.");
+                throw new InvalidOperationException(UrlSafety.Describe(rejection));
             }
 
-            link.OriginalUrl = safeUri!.ToString();
+            link.OriginalUrl = normalizedUrl;
             link.Title = linkDto.Title?.Trim();
             link.IsActive = linkDto.IsActive;
             link.ExpiresAt = linkDto.ExpiresAt;
@@ -188,6 +187,17 @@ namespace LinkGuardiao.Application.Services
         }
 
         private static string GenerateRandomShortCode()
+        {
+            string code;
+            do
+            {
+                code = GenerateCandidateShortCode();
+            } while (ShortCodePolicy.IsReserved(code));
+
+            return code;
+        }
+
+        private static string GenerateCandidateShortCode()
         {
             Span<byte> buffer = stackalloc byte[ShortCodeLength];
             RandomNumberGenerator.Fill(buffer);

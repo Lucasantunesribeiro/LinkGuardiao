@@ -9,10 +9,16 @@ namespace LinkGuardiao.Application.Validation
         public LinkCreateDtoValidator()
         {
             RuleFor(x => x.OriginalUrl)
+                .Cascade(CascadeMode.Stop)
                 .NotEmpty()
-                .MaximumLength(2048)
-                .Must(UrlSafety.IsSafeHttpUrl)
-                .WithMessage("URL must be a valid http/https address.");
+                .MaximumLength(UrlSafety.MaxUrlLength)
+                .Custom((url, context) =>
+                {
+                    if (!UrlSafety.TryNormalize(url, out _, out var reason))
+                    {
+                        context.AddFailure(nameof(LinkCreateDto.OriginalUrl), UrlSafety.Describe(reason));
+                    }
+                });
 
             RuleFor(x => x.Title)
                 .MaximumLength(100)

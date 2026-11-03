@@ -1,0 +1,42 @@
+# Blueprint do Render para a demo gratuita da API (plano free, sem cartao).
+# Banco: PostgreSQL gratuito no Neon (https://neon.tech). Frontend: Cloudflare Pages (ver readme.md).
+# Uso: Render Dashboard > New > Blueprint > selecione este repositorio. Os valores com sync: false
+# sao pedidos na criacao e nunca ficam no repositorio.
+services:
+  - type: web
+    name: linkguardiao-api
+    runtime: docker
+    plan: free
+    dockerfilePath: ./src/LinkGuardiao.Api/Dockerfile
+    dockerContext: .
+    healthCheckPath: /health/live
+    autoDeploy: false
+    envVars:
+      - key: ASPNETCORE_ENVIRONMENT
+        value: Production
+      # A imagem escuta em 8080 (ASPNETCORE_URLS); o Render roteia para a porta em PORT.
+      - key: PORT
+        value: "8080"
+      - key: STORAGE_PROVIDER
+        value: postgresql
+      # Aplica as migrations do EF Core na inicializacao (nao ha passo de migracao separado no plano free).
+      - key: POSTGRESQL_AUTO_MIGRATE
+        value: "true"
+      # Todo trafego chega pelo proxy do Render: usa o IP de X-Forwarded-For no rate limiting.
+      - key: TRUST_FORWARDED_HEADERS
+        value: "true"
+      # Connection string Npgsql do Neon (formato chave=valor, nao URI), ex.:
+      # Host=ep-xxx.us-east-2.aws.neon.tech;Database=neondb;Username=neondb_owner;Password=...;SSL Mode=Require
+      - key: ConnectionStrings__PostgreSQL
+        sync: false
+      # Origem do frontend, ex.: https://linkguardiao.pages.dev
+      - key: CORS_ALLOWED_ORIGIN
+        sync: false
+      - key: JWT__SECRET
+        generateValue: true
+      - key: JWT__ISSUER
+        value: LinkGuardiao
+      - key: JWT__AUDIENCE
+        value: LinkGuardiao
+      - key: LINKLIMITS__DAILYUSERCREATELIMIT
+        value: "20"
